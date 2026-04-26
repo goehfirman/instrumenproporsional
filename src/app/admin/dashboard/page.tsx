@@ -24,6 +24,7 @@ export default function AdminDashboard() {
     const [loading, setLoading] = useState(true);
     const [authChecking, setAuthChecking] = useState(true);
     const [gradingModal, setGradingModal] = useState<Student | null>(null);
+    const [batchLoadingStudentId, setBatchLoadingStudentId] = useState<string | null>(null);
     const [scoreInput, setScoreInput] = useState<number | "">("");
     const [activeView, setActiveView] = useState<"Rekap" | "Lingkungan" | "Efikasi" | "Evaluasi">("Rekap");
     const [popover, setPopover] = useState<{ text: string, x: number, y: number, idx: number } | null>(null);
@@ -392,7 +393,6 @@ export default function AdminDashboard() {
         }
     };
 
-    const [batchLoadingStudentId, setBatchLoadingStudentId] = useState<string | null>(null);
     const handleAutoGradingForStudent = async (student: Student) => {
         const essayAns = typeof student.essay_answer === "string" ? { 0: student.essay_answer } : student.essay_answer || {};
         if (Object.keys(essayAns).length === 0) {
