@@ -871,9 +871,9 @@ export default function AdminDashboard() {
                                     </button>
 
                                     {aiFeedback && (
-                                        <div className="mt-4 p-4 bg-purple-50 border border-purple-100 rounded-xl animate-in fade-in slide-in-from-top-2">
-                                            <h5 className="text-[10px] font-black text-purple-400 uppercase tracking-widest mb-1">AI Feedback</h5>
-                                            <p className="text-xs text-purple-800 leading-relaxed italic">"{aiFeedback}"</p>
+                                        <div className="mt-4 p-5 bg-purple-50 border border-purple-200 border-l-4 border-l-purple-500 rounded-xl">
+                                            <h5 className="text-xs font-black text-purple-500 uppercase tracking-widest mb-2">🤖 AI Feedback</h5>
+                                            <p className="text-sm text-purple-900 leading-relaxed">{aiFeedback}</p>
                                         </div>
                                     )}
                                     <p className="text-xs text-slate-400 mt-3 text-center">

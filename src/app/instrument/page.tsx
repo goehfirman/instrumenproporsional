@@ -479,7 +479,7 @@ function InstrumentContent() {
                                                     let s2C = sit === 2 ? newChoice : (currentVal.match(/S2: (Proporsional|Tidak Proporsional)/)?.[1] || "");
                                                     let s2R = sit === 2 ? newReason : (currentVal.match(/A2: ([^|]*)/)?.[1] || "").trim();
 
-                                                    const newVal = `[GRID] S1: ${s1C || '-'} | A1: ${s1R || '-'} | S2: ${s2C || '-'} | A2: ${s2R || '-'}`;
+                                                    const newVal = `[GRID] S1: ${s1C || ''} | A1: ${s1R || ''} | S2: ${s2C || ''} | A2: ${s2R || ''}`;
                                                     const newMap = { ...essayAnswers, [essayStep]: newVal };
                                                     setEssayAnswers(newMap);
                                                     autoSaveEssay(newMap);
