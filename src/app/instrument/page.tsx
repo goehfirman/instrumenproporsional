@@ -460,7 +460,7 @@ function InstrumentContent() {
                                                 // Extract choices and reason using more robust regex
                                                 const choiceMatch = currentVal.match(new RegExp(`S${sit}:\\s*(Proporsional|Tidak Proporsional)`));
                                                 const choice = choiceMatch ? choiceMatch[1] : "";
-                                                const reasonMatch = currentVal.match(new RegExp(`A${sit}:\\s*([^|]*?)\\s*(?=\\||$)`));
+                                                const reasonMatch = currentVal.match(new RegExp(`A${sit}:\\s*([^|]*)`));
                                                 const reason = reasonMatch ? reasonMatch[1] : "";
 
                                                 const isProp = choice === 'Proporsional';
@@ -474,9 +474,9 @@ function InstrumentContent() {
                                                 const updateData = (newChoice: string, newReason: string) => {
                                                     // Parse existing or defaults
                                                     let s1C = sit === 1 ? newChoice : (currentVal.match(/S1:\s*(Proporsional|Tidak Proporsional)/)?.[1] || "");
-                                                    let s1R = sit === 1 ? newReason : (currentVal.match(/A1:\s*([^|]*?)\s*(?=\||$)/)?.[1] || "");
+                                                    let s1R = sit === 1 ? newReason : (currentVal.match(/A1:\s*([^|]*)/)?.[1] || "");
                                                     let s2C = sit === 2 ? newChoice : (currentVal.match(/S2:\s*(Proporsional|Tidak Proporsional)/)?.[1] || "");
-                                                    let s2R = sit === 2 ? newReason : (currentVal.match(/A2:\s*([^|]*?)\s*(?=\||$)/)?.[1] || "");
+                                                    let s2R = sit === 2 ? newReason : (currentVal.match(/A2:\s*([^|]*)/)?.[1] || "");
 
                                                     const newVal = `[GRID] S1:${s1C}|A1:${s1R}|S2:${s2C}|A2:${s2R}`;
                                                     const newMap = { ...essayAnswers, [essayStep]: newVal };
