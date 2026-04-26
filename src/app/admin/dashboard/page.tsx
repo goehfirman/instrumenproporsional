@@ -5,7 +5,7 @@ import { collection, getDocs, doc, updateDoc, onSnapshot } from "firebase/firest
 import { onAuthStateChanged, signOut } from "firebase/auth";
 import { db, auth } from "@/lib/firebase";
 import { useRouter } from "next/navigation";
-import { Users, BookOpen, CheckCircle, Download, LogOut, Edit, Eye, Trash2, Search, Filter, AlertTriangle, Sparkles, Zap } from "lucide-react";
+import { Users, BookOpen, CheckCircle, Download, LogOut, Edit, Eye, Trash2, Search, Filter, AlertTriangle, Sparkles, Zap, Wand2 } from "lucide-react";
 import * as XLSX from "xlsx";
 import { LINGKUNGAN_BELAJAR_Q, EFIKASI_DIRI_Q, TES_SOAL, ESSAY_QUESTIONS } from "@/lib/constants";
 
@@ -392,6 +392,61 @@ export default function AdminDashboard() {
         }
     };
 
+    const [batchLoadingStudentId, setBatchLoadingStudentId] = useState<string | null>(null);
+    const handleAutoGradingForStudent = async (student: Student) => {
+        const essayAns = typeof student.essay_answer === "string" ? { 0: student.essay_answer } : student.essay_answer || {};
+        if (Object.keys(essayAns).length === 0) {
+            alert("Tidak ada jawaban yang bisa dievaluasi.");
+            return;
+        }
+
+        if (!confirm(`Mulai evaluasi AI otomatis untuk semua soal ${student.name}?`)) return;
+
+        setBatchLoadingStudentId(student.id);
+        setGradingLoading(true);
+
+        try {
+            const currentScores = { ...(student.essay_scores || {}) };
+            for (let i = 0; i < ESSAY_QUESTIONS.length; i++) {
+                const answer = essayAns[i];
+                if (answer && answer.length >= 5) {
+                    const q = ESSAY_QUESTIONS[i];
+                    try {
+                        const res = await fetch("/api/grade", {
+                            method: "POST",
+                            headers: { "Content-Type": "application/json" },
+                            body: JSON.stringify({
+                                questionText: q.text,
+                                studentAnswer: answer,
+                                rubric: q.rubric,
+                                indicator: q.indicator,
+                                cognitiveLevel: q.cognitiveLevel
+                            })
+                        });
+                        const data = await res.json();
+                        if (data.score !== undefined) {
+                            currentScores[i] = data.score;
+                            // Update state locally for real-time feedback
+                            setStudents(prev => prev.map(s => s.id === student.id ? { ...s, essay_scores: { ...currentScores } } : s));
+                        }
+                    } catch (e) {
+                        console.error(`Error grading Q${i + 1}:`, e);
+                    }
+                }
+            }
+
+            // Sync to Firestore
+            const studentRef = doc(db, "respondents", student.id);
+            await updateDoc(studentRef, { essay_scores: currentScores });
+        } catch (error) {
+            console.error("Batch Grading Error:", error);
+            alert("Terjadi kesalahan saat batch grading.");
+        } finally {
+            setBatchLoadingStudentId(null);
+            setGradingLoading(false);
+        }
+    };
+
     const handleBatchAIGrading = async () => {
         if (!gradingModal) return;
         const essayAns = typeof gradingModal.essay_answer === "string" ? { 0: gradingModal.essay_answer } : gradingModal.essay_answer || {};
@@ -642,8 +697,17 @@ export default function AdminDashboard() {
                                                 </td>
                                                 <td className="p-4 flex justify-center gap-2">
                                                     <button
+                                                        onClick={() => handleAutoGradingForStudent(s)}
+                                                        disabled={batchLoadingStudentId === s.id}
+                                                        className="bg-purple-100 text-purple-700 hover:bg-purple-600 hover:text-white p-2 rounded-lg transition disabled:opacity-50"
+                                                        title="Koreksi Otomatis (Semua Soal)"
+                                                    >
+                                                        <Wand2 className={`w-5 h-5 ${batchLoadingStudentId === s.id ? 'animate-spin' : ''}`} />
+                                                    </button>
+                                                    <button
                                                         onClick={() => { setGradingModal(s); setModalEssayIdx(0); }}
                                                         className="bg-primary/10 text-primary hover:bg-primary hover:text-white p-2 rounded-lg transition"
+                                                        title="Evaluasi Detail"
                                                     >
                                                         <Edit className="w-5 h-5" />
                                                     </button>
