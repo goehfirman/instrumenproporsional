@@ -5,7 +5,7 @@ import { collection, getDocs, doc, updateDoc, onSnapshot } from "firebase/firest
 import { onAuthStateChanged, signOut } from "firebase/auth";
 import { db, auth } from "@/lib/firebase";
 import { useRouter } from "next/navigation";
-import { Users, BookOpen, CheckCircle, Download, LogOut, Bot, Edit, Eye, Trash2, Search, Filter, AlertTriangle } from "lucide-react";
+import { Users, BookOpen, CheckCircle, Download, LogOut, Edit, Eye, Trash2, Search, Filter, AlertTriangle, Sparkles, Zap } from "lucide-react";
 import * as XLSX from "xlsx";
 import { LINGKUNGAN_BELAJAR_Q, EFIKASI_DIRI_Q, TES_SOAL, ESSAY_QUESTIONS } from "@/lib/constants";
 

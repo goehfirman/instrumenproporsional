@@ -4,7 +4,7 @@ import { useSearchParams, useRouter } from "next/navigation";
 import { useEffect, useState, Suspense } from "react";
 import { doc, getDoc, updateDoc } from "firebase/firestore";
 import { db } from "@/lib/firebase";
-import { Loader2, Save, Home, BrainCircuit, CheckCircle, Bot } from "lucide-react";
+import { Loader2, Save, Home, BrainCircuit, CheckCircle } from "lucide-react";
 import { useRef } from "react";
 
 import { LINGKUNGAN_BELAJAR_Q, EFIKASI_DIRI_Q, TES_SOAL, DimensionGroup, ESSAY_QUESTIONS } from "@/lib/constants";
