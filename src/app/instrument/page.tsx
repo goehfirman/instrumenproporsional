@@ -167,13 +167,7 @@ function InstrumentContent() {
             <div className="w-full max-w-3xl mx-auto py-8 animate-in fade-in zoom-in duration-500">
                 <div className="bg-white p-6 md:p-8 rounded-3xl shadow-sm border border-slate-100 mb-8">
                     <div className="text-center mb-8 border-b-2 border-primary/20 pb-6">
-                        <h2 className="text-lg font-bold text-slate-600 tracking-wider mb-2">Instrumen Penelitian</h2>
-                        <p className="text-foreground font-medium text-xs md:text-sm leading-relaxed max-w-xl mx-auto">
-                            (Pengaruh Lingkungan Belajar dan Efikasi Diri terhadap Kemampuan Penalaran Proporsional Matematika)
-                        </p>
-                        <div className="mt-6">
-                            <h1 className="text-2xl font-bold text-primary">{title}</h1>
-                        </div>
+                        <h1 className="text-2xl font-bold text-primary">{title}</h1>
                     </div>
 
                     {/* Dimension Header */}
@@ -407,13 +401,7 @@ function InstrumentContent() {
 
                 <div className="bg-white p-6 md:p-8 rounded-3xl shadow-sm border border-slate-100 mb-8">
                     <div className="text-center mb-10 border-b-2 border-primary/20 pb-6">
-                        <h2 className="text-lg font-bold text-slate-600 tracking-wider mb-2">Instrumen Penelitian</h2>
-                        <p className="text-foreground font-medium text-xs md:text-sm leading-relaxed max-w-xl mx-auto">
-                            (Pengaruh Lingkungan Belajar dan Efikasi Diri terhadap Kemampuan Penalaran Proporsional Matematika)
-                        </p>
-                        <div className="mt-6">
-                            <h1 className="text-2xl font-bold text-primary">Tes Penalaran Proporsional</h1>
-                        </div>
+                        <h1 className="text-2xl font-bold text-primary">Tes Penalaran Proporsional</h1>
                     </div>
 
                     <div className="flex justify-between items-center mb-6 border-b border-slate-100 pb-4">

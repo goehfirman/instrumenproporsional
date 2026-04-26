@@ -614,20 +614,29 @@ export default function AdminDashboard() {
                                                     <div className="font-bold text-slate-800">{s.name}</div>
                                                     <div className="text-[10px] text-slate-400 font-medium">ID: {s.id}</div>
                                                 </td>
-                                                {ESSAY_QUESTIONS.map((_, i) => (
-                                                    <td key={i} className="p-4 text-center">
-                                                        {essayAns[i] ? (
-                                                            <button
-                                                                onClick={() => { setGradingModal(s); setModalEssayIdx(i); }}
-                                                                className="text-emerald-600 font-bold text-xs bg-emerald-50 px-2 py-1 rounded-md border border-emerald-100 hover:bg-emerald-100 transition-colors"
-                                                            >
-                                                                Dijawab
-                                                            </button>
-                                                        ) : (
-                                                            <span className="text-slate-300 font-medium text-xs">Kosong</span>
-                                                        )}
-                                                    </td>
-                                                ))}
+                                                {ESSAY_QUESTIONS.map((_, i) => {
+                                                    const score = s.essay_scores?.[i];
+                                                    const hasAnswer = !!essayAns[i];
+                                                    const scoreColor = score !== undefined
+                                                        ? score >= 3 ? "bg-emerald-100 text-emerald-700 border-emerald-200"
+                                                            : score === 2 ? "bg-amber-100 text-amber-700 border-amber-200"
+                                                                : "bg-rose-100 text-rose-700 border-rose-200"
+                                                        : hasAnswer ? "bg-slate-100 text-slate-500 border-slate-200" : "";
+                                                    return (
+                                                        <td key={i} className="p-4 text-center">
+                                                            {hasAnswer ? (
+                                                                <button
+                                                                    onClick={() => { setGradingModal(s); setModalEssayIdx(i); }}
+                                                                    className={`font-bold text-sm px-3 py-1 rounded-md border hover:opacity-80 transition-colors ${scoreColor}`}
+                                                                >
+                                                                    {score !== undefined ? score : "-"}
+                                                                </button>
+                                                            ) : (
+                                                                <span className="text-slate-300 font-medium text-xs">-</span>
+                                                            )}
+                                                        </td>
+                                                    );
+                                                })}
                                                 <td className="p-4 text-center font-bold text-primary">
                                                     {s.essay_scores ? Object.values(s.essay_scores).reduce((a, b) => a + b, 0) : 0}
                                                 </td>
