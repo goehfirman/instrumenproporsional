@@ -14,7 +14,7 @@ export async function POST(req: Request) {
         }
 
         // Reverting to v1beta + gemini-pro (Legacy Stable) which has the highest compatibility
-        const URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${apiKey}`;
+        const URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
 
         const prompt = `
             Anda adalah pakar evaluasi pendidikan matematika. Tugas Anda adalah menilai jawaban siswa pada soal esai penalaran proporsional (0-4).
