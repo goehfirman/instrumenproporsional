@@ -13,8 +13,8 @@ export async function POST(req: Request) {
             return NextResponse.json({ score: 0, feedback: "Jawaban kosong atau terlalu singkat." });
         }
 
-        // Reverting to v1beta + gemini-pro (Legacy Stable) which has the highest compatibility
-        const URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
+        // Using gemini-2.0-flash (confirmed available for this API key)
+        const URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
 
         const prompt = `
             Anda adalah pakar evaluasi pendidikan matematika. Tugas Anda adalah menilai jawaban siswa pada soal esai penalaran proporsional (0-4).
