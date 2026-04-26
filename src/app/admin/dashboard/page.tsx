@@ -840,16 +840,16 @@ export default function AdminDashboard() {
                                 <div className="mb-auto">
                                     <button
                                         onClick={() => {
-                                            const ans = typeof gradingModal.essay_answer === "string"
-                                                ? (modalEssayIdx === 0 ? gradingModal.essay_answer : "")
+                                            const ans = modalEssayIdx === 0 && typeof gradingModal.essay_answer === "string"
+                                                ? gradingModal.essay_answer
                                                 : gradingModal.essay_answer?.[modalEssayIdx];
                                             handleAIGrading(ans || "");
                                         }}
                                         disabled={!gradingModal.essay_answer || gradingLoading}
                                         className="w-full bg-gradient-to-r from-purple-500 to-indigo-600 hover:from-purple-600 hover:to-indigo-700 text-white font-bold py-3 px-4 rounded-xl transition shadow-md flex justify-center items-center gap-2 disabled:opacity-50"
                                     >
-                                        <Bot className={`w-5 h-5 ${gradingLoading ? 'animate-spin' : ''}`} />
-                                        {gradingLoading ? "Menganalisis..." : "Koreksi dgn Gemini AI"}
+                                        <Sparkles className={`w-5 h-5 ${gradingLoading ? 'animate-spin' : ''}`} />
+                                        {gradingLoading ? "Menganalisis..." : "Koreksi dgn AI"}
                                     </button>
 
                                     <button
@@ -857,7 +857,7 @@ export default function AdminDashboard() {
                                         disabled={!gradingModal.essay_answer || gradingLoading}
                                         className="w-full mt-2 bg-slate-800 hover:bg-black text-white font-bold py-2 px-4 rounded-xl transition shadow-md flex justify-center items-center gap-2 disabled:opacity-50 text-xs"
                                     >
-                                        <Bot className={`w-4 h-4 ${gradingLoading ? 'animate-spin' : ''}`} />
+                                        <Zap className={`w-4 h-4 ${gradingLoading ? 'animate-spin' : ''}`} />
                                         Koreksi Semua (AI)
                                     </button>
 
@@ -872,7 +872,7 @@ export default function AdminDashboard() {
 
                                     {aiFeedback && (
                                         <div className="mt-4 p-5 bg-purple-50 border border-purple-200 border-l-4 border-l-purple-500 rounded-xl">
-                                            <h5 className="text-xs font-black text-purple-500 uppercase tracking-widest mb-2">🤖 AI Feedback</h5>
+                                            <h5 className="text-xs font-black text-purple-500 uppercase tracking-widest mb-2">AI Feedback</h5>
                                             <p className="text-sm text-purple-900 leading-relaxed">{aiFeedback}</p>
                                         </div>
                                     )}

@@ -421,9 +421,8 @@ function InstrumentContent() {
 
                     {currentQ.id === 5 && (
                         <div className="bg-amber-50 border border-amber-100 p-4 rounded-xl mb-8 flex gap-3 items-start">
-                            <Bot className="w-5 h-5 text-amber-600 mt-0.5 shrink-0" />
                             <div className="text-xs text-amber-800 leading-relaxed">
-                                <p className="font-bold mb-1">💡 Petunjuk Konteks:</p>
+                                <p className="font-bold mb-1">💡 Petunjuk:</p>
                                 <ul className="list-disc ml-4 space-y-1 font-medium">
                                     <li><strong>Proporsional</strong>: Hubungan yang melibatkan perkalian atau pembagian yang bersifat konstan.</li>
                                     <li><strong>Tidak Proporsional</strong>: Hubungan yang hanya berdasarkan pada penjumlahan atau selisih yang bersifat tetap.</li>
@@ -591,7 +590,6 @@ function InstrumentContent() {
                                 </div>
                                 <div className="p-4 bg-primary/5 rounded-2xl border border-primary/10 text-xs text-primary font-bold flex flex-col sm:flex-row justify-between items-center gap-4">
                                     <div className="flex gap-2 items-center">
-                                        <Bot className="w-4 h-4" />
                                         <span>Petunjuk: Isi kolom Jumlah Cokelat (n) dan kolom Harga (Rp) secara manual sesuai pemikiran Anda.</span>
                                     </div>
                                     <button
