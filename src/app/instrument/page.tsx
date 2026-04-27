@@ -421,7 +421,7 @@ function InstrumentContent() {
 
                     <div className="flex justify-between items-center mb-6 border-b border-slate-100 pb-4">
                         <h2 className="text-xl font-bold text-primary flex items-center gap-2">
-                            <BrainCircuit className="w-6 h-6" /> Soal Latihan
+                            <BrainCircuit className="w-6 h-6" /> Soal Tes
                         </h2>
                         <span className="bg-primary/10 text-primary px-3 py-1 rounded-full text-xs font-black uppercase tracking-tighter">
                             Butir Soal {essayStep + 1}
