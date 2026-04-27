@@ -5,7 +5,7 @@ import { collection, getDocs, doc, updateDoc, onSnapshot } from "firebase/firest
 import { onAuthStateChanged, signOut } from "firebase/auth";
 import { db, auth } from "@/lib/firebase";
 import { useRouter } from "next/navigation";
-import { Users, BookOpen, CheckCircle, Download, LogOut, Edit, Eye, Trash2, Search, Filter, AlertTriangle, Sparkles, Zap, Wand2, Settings, Flag } from "lucide-react";
+import { Users, BookOpen, CheckCircle, Download, LogOut, Edit, Eye, Trash2, Search, Filter, AlertTriangle, Sparkles, Zap, Wand2, Settings, Flag, Home, BrainCircuit } from "lucide-react";
 import * as XLSX from "xlsx";
 import { LINGKUNGAN_BELAJAR_Q, EFIKASI_DIRI_Q, TES_SOAL, ESSAY_QUESTIONS } from "@/lib/constants";
 
@@ -609,11 +609,11 @@ export default function AdminDashboard() {
         }
         return (
             <tr>
-                <th className="p-4 font-semibold text-left">Nama Lengkap</th>
-                <th className="p-4 font-semibold text-center">Kualitas Lingkungan</th>
-                <th className="p-4 font-semibold text-center">Kualitas Efikasi</th>
-                <th className="p-4 font-semibold text-center">Lingkungan</th>
-                <th className="p-4 font-semibold text-center">Efikasi</th>
+                <th className="p-4 font-semibold text-left">Nama</th>
+                <th className="p-4 font-semibold text-center">Kualitas Lingk.</th>
+                <th className="p-4 font-semibold text-center">Kualitas Efi.</th>
+                <th className="p-4 font-semibold text-center">Lingk.</th>
+                <th className="p-4 font-semibold text-center">Efi.</th>
                 <th className="p-4 font-semibold text-center">Esai</th>
                 <th className="p-4 font-semibold text-center">Triangulasi</th>
                 <th className="p-4 font-semibold text-center">Aksi</th>
@@ -916,26 +916,26 @@ export default function AdminDashboard() {
     return (
         <div className="min-h-screen bg-slate-50 text-foreground">
             {/* Navbar */}
-            <nav className="bg-primary text-white p-4 shadow-md sticky top-0 z-10">
+            <nav className="bg-primary text-white p-3 sm:p-4 shadow-md sticky top-0 z-50">
                 <div className="max-w-7xl mx-auto flex justify-between items-center">
-                    <h1 className="font-bold text-xl tracking-wide">Portal Admin Peneliti</h1>
-                    <div className="flex items-center gap-2">
+                    <h1 className="font-bold text-sm sm:text-xl tracking-wide truncate mr-2">Admin Peneliti</h1>
+                    <div className="flex items-center gap-1 sm:gap-2">
                         <button
                             onClick={() => router.push("/")}
-                            className="flex items-center gap-2 px-4 py-2 rounded-lg hover:bg-primary-hover text-white/90 hover:text-white transition font-medium"
+                            className="flex items-center gap-2 px-2 sm:px-4 py-2 rounded-lg hover:bg-primary-hover text-white/90 hover:text-white transition font-medium text-xs sm:text-sm"
                         >
-                            <BookOpen className="w-5 h-5" /> Home
+                            <Home className="w-4 h-4 sm:w-5 sm:h-5" /> <span className="hidden sm:inline">Home</span>
                         </button>
-                        <div className="w-[1px] h-6 bg-white/20 mx-1"></div>
+                        <div className="w-[1px] h-4 sm:h-6 bg-white/20 mx-0.5 sm:mx-1"></div>
                         <button
                             onClick={() => setActiveView("Settings")}
-                            className={`flex items-center gap-2 px-4 py-2 rounded-lg transition font-medium ${activeView === "Settings" ? "bg-white text-primary shadow-md" : "hover:bg-primary-hover text-white/90 hover:text-white"}`}
+                            className={`flex items-center gap-2 px-2 sm:px-4 py-2 rounded-lg transition font-medium text-xs sm:text-sm ${activeView === "Settings" ? "bg-white text-primary shadow-md" : "hover:bg-primary-hover text-white/90 hover:text-white"}`}
                         >
-                            <Settings className="w-5 h-5" /> Pengaturan
+                            <Settings className="w-4 h-4 sm:w-5 sm:h-5" /> <span className="hidden sm:inline">Pengaturan</span>
                         </button>
-                        <div className="w-[1px] h-6 bg-white/20 mx-1"></div>
-                        <button onClick={handleLogout} className="flex items-center gap-2 hover:bg-primary-hover px-4 py-2 rounded-lg transition text-white/90 hover:text-white font-medium">
-                            <LogOut className="w-5 h-5" /> Keluar
+                        <div className="w-[1px] h-4 sm:h-6 bg-white/20 mx-0.5 sm:mx-1"></div>
+                        <button onClick={handleLogout} className="flex items-center gap-2 hover:bg-primary-hover px-2 sm:px-4 py-2 rounded-lg transition text-white/90 hover:text-white font-medium text-xs sm:text-sm">
+                            <LogOut className="w-4 h-4 sm:w-5 sm:h-5" /> <span className="hidden sm:inline">Keluar</span>
                         </button>
                     </div>
                 </div>
@@ -943,26 +943,26 @@ export default function AdminDashboard() {
 
             <main className="max-w-7xl mx-auto p-4 sm:p-6 lg:p-8">
                 {/* Metrics */}
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 mb-8">
-                    <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 flex items-center">
-                        <div className="bg-blue-100 p-4 rounded-xl mr-4"><Users className="w-8 h-8 text-blue-600" /></div>
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-3 sm:gap-6 mb-8">
+                    <div className="bg-white p-4 sm:p-6 rounded-2xl shadow-sm border border-slate-100 flex items-center">
+                        <div className="bg-blue-100 p-2 sm:p-4 rounded-xl mr-3 sm:mr-4"><Users className="w-5 h-5 sm:w-8 sm:h-8 text-blue-600" /></div>
                         <div>
-                            <p className="text-slate-500 text-sm font-medium">Total Responden</p>
-                            <h2 className="text-3xl font-bold text-slate-800">{totalSiswa}</h2>
+                            <p className="text-slate-500 text-[10px] sm:text-sm font-medium">Responden</p>
+                            <h2 className="text-xl sm:text-3xl font-bold text-slate-800">{totalSiswa}</h2>
                         </div>
                     </div>
-                    <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 flex items-center">
-                        <div className="bg-amber-100 p-4 rounded-xl mr-4"><BookOpen className="w-8 h-8 text-amber-600" /></div>
+                    <div className="bg-white p-4 sm:p-6 rounded-2xl shadow-sm border border-slate-100 flex items-center">
+                        <div className="bg-amber-100 p-2 sm:p-4 rounded-xl mr-3 sm:mr-4"><BookOpen className="w-5 h-5 sm:w-8 sm:h-8 text-amber-600" /></div>
                         <div>
-                            <p className="text-slate-500 text-sm font-medium">Sedang Mengerjakan</p>
-                            <h2 className="text-3xl font-bold text-slate-800">{sedangMengerjakan}</h2>
+                            <p className="text-slate-500 text-[10px] sm:text-sm font-medium">Progres</p>
+                            <h2 className="text-xl sm:text-3xl font-bold text-slate-800">{sedangMengerjakan}</h2>
                         </div>
                     </div>
-                    <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 flex items-center">
-                        <div className="bg-green-100 p-4 rounded-xl mr-4"><CheckCircle className="w-8 h-8 text-green-600" /></div>
+                    <div className="bg-white p-4 sm:p-6 rounded-2xl shadow-sm border border-slate-100 flex items-center col-span-2 md:col-span-1">
+                        <div className="bg-green-100 p-2 sm:p-4 rounded-xl mr-3 sm:mr-4"><CheckCircle className="w-5 h-5 sm:w-8 sm:h-8 text-green-600" /></div>
                         <div>
-                            <p className="text-slate-500 text-sm font-medium">Selesai</p>
-                            <h2 className="text-3xl font-bold text-slate-800">{selesai}</h2>
+                            <p className="text-slate-500 text-[10px] sm:text-sm font-medium">Selesai</p>
+                            <h2 className="text-xl sm:text-3xl font-bold text-slate-800">{selesai}</h2>
                         </div>
                     </div>
                 </div>

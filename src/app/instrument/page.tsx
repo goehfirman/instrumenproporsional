@@ -185,38 +185,27 @@ function InstrumentContent() {
                         <p className="text-white/80 text-sm font-medium mt-1">Bagian {subStep + 1} dari {groups.length}</p>
                     </div>
 
-                    <div className="bg-blue-50/50 p-6 pt-10 rounded-2xl border border-blue-100 mb-8">
-                        <h3 className="font-bold text-primary mb-3 text-lg">PETUNJUK PENGISIAN</h3>
-                        <p className="text-slate-700 text-sm leading-relaxed mb-4">
-                            Bacalah setiap pernyataan berikut dengan saksama, kemudian pilihlah kolom angka yang paling sesuai dengan keadaan Anda selama mengikuti pembelajaran matematika di sekolah.
+                    <div className="bg-blue-50/50 p-4 sm:p-6 sm:pt-10 rounded-2xl border border-blue-100 mb-8 px-4 sm:px-6">
+                        <h3 className="font-bold text-primary mb-2 sm:mb-3 text-base sm:text-lg">PETUNJUK PENGISIAN</h3>
+                        <p className="text-slate-700 text-[11px] sm:text-sm leading-relaxed mb-4">
+                            Bacalah setiap pernyataan berikut dengan saksama, kemudian pilihlah kolom angka yang paling sesuai dengan keadaan Anda.
                         </p>
 
-                        <p className="font-bold text-slate-800 text-sm mb-2">Keterangan pilihan jawaban:</p>
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-sm mb-4">
-                            <div className="bg-white p-3 rounded-lg border border-slate-200 flex items-center">
-                                <span className="font-bold text-slate-700 w-12 inline-block">SS</span>
-                                <span className="text-slate-600">= Sangat Setuju</span>
-                            </div>
-                            <div className="bg-white p-3 rounded-lg border border-slate-200 flex items-center">
-                                <span className="font-bold text-slate-700 w-12 inline-block">S</span>
-                                <span className="text-slate-600">= Setuju</span>
-                            </div>
-                            <div className="bg-white p-3 rounded-lg border border-slate-200 flex items-center">
-                                <span className="font-bold text-slate-700 w-12 inline-block">R</span>
-                                <span className="text-slate-600">= Ragu-Ragu</span>
-                            </div>
-                            <div className="bg-white p-3 rounded-lg border border-slate-200 flex items-center">
-                                <span className="font-bold text-slate-700 w-12 inline-block">TS</span>
-                                <span className="text-slate-600">= Tidak Setuju</span>
-                            </div>
-                            <div className="bg-white p-3 rounded-lg border border-slate-200 sm:col-span-2 flex items-center">
-                                <span className="font-bold text-slate-700 w-12 inline-block">STS</span>
-                                <span className="text-slate-600">= Sangat Tidak Setuju</span>
-                            </div>
+                        <p className="font-bold text-slate-800 text-xs sm:text-sm mb-2">Pilihan jawaban:</p>
+                        <div className="grid grid-cols-2 sm:grid-cols-2 gap-1.5 sm:gap-2 text-[10px] sm:text-sm mb-4">
+                            {[
+                                { k: 'SS', v: 'Sangat Setuju' },
+                                { k: 'S', v: 'Setuju' },
+                                { k: 'R', v: 'Ragu-Ragu' },
+                                { k: 'TS', v: 'Tidak Setuju' },
+                                { k: 'STS', v: 'Sangat Tidak Setuju', span: true }
+                            ].map((item) => (
+                                <div key={item.k} className={`bg-white p-2 rounded-lg border border-slate-200 flex items-center ${item.span ? 'col-span-2' : ''}`}>
+                                    <span className="font-bold text-slate-700 w-8 sm:w-12 inline-block">{item.k}</span>
+                                    <span className="text-slate-600 truncate">= {item.v}</span>
+                                </div>
+                            ))}
                         </div>
-                        <p className="text-xs text-slate-500 italic mt-4 bg-yellow-50 p-3 rounded-lg border border-yellow-100">
-                            Catatan: Jawablah sesuai keadaan yang Anda rasakan. Jawaban Anda bersifat rahasia dan hanya digunakan untuk keperluan penelitian.
-                        </p>
                     </div>
 
                     <div id="questions-start" className="space-y-8">
@@ -249,7 +238,7 @@ function InstrumentContent() {
                                                     }}
                                                     className="sr-only"
                                                 />
-                                                <div className={`w-12 h-12 md:w-16 md:h-16 flex items-center justify-center rounded-full text-base md:text-lg font-bold transition-all shadow-sm shrink-0
+                                                <div className={`w-10 h-10 sm:w-12 sm:h-12 md:w-16 md:h-16 flex items-center justify-center rounded-full text-sm md:text-lg font-bold transition-all shadow-sm shrink-0
                                                 ${answers[globalIndex] === item.val
                                                         ? 'bg-primary text-white scale-110 shadow-primary/30 ring-4 ring-primary/20 z-10'
                                                         : 'bg-white text-slate-400 border-2 border-slate-200 group-hover:border-primary/40 group-hover:bg-blue-50'}
@@ -385,7 +374,15 @@ function InstrumentContent() {
                     </div>
                     <div className="flex flex-wrap gap-2">
                         {ESSAY_QUESTIONS.map((_, i) => {
-                            const isAnswered = (essayAnswers[i] || "").trim().length >= 5;
+                            const isAnswered = (() => {
+                                const val = (essayAnswers[i] || "").trim();
+                                if (!val) return false;
+                                if (i === 6) { // Soal No 7
+                                    const clean = val.replace(/\[VISUAL:.*?\]|\[TABLE\]|\[LINE-T\]|\[LINE-B\]|\[REASON\]|[:| \t\n\r]/g, "");
+                                    return clean.length > 0;
+                                }
+                                return val.length > 0;
+                            })();
                             const isCurrent = essayStep === i;
                             return (
                                 <button
@@ -870,7 +867,7 @@ function InstrumentContent() {
                                                 key={i}
                                                 type="button"
                                                 onClick={() => insertMathSymbol(s.sym)}
-                                                className={`h-12 sm:h-14 rounded-xl text-xl font-bold transition-all active:scale-95 flex items-center justify-center
+                                                className={`h-11 sm:h-14 rounded-xl text-lg sm:text-xl font-bold transition-all active:scale-95 flex items-center justify-center
                                                     ${s.type === 'num' ? 'bg-slate-700 text-white hover:bg-slate-600' : 'bg-primary text-white hover:bg-primary-hover'}
                                                 `}
                                             >
@@ -886,18 +883,18 @@ function InstrumentContent() {
                                                 key={i}
                                                 type="button"
                                                 onClick={() => insertMathSymbol((s as any).insert || s.sym)}
-                                                className="h-12 sm:h-14 bg-slate-800 text-white border border-slate-700 rounded-xl hover:bg-slate-700 transition-all active:scale-95 group relative flex flex-col items-center justify-center pt-1"
+                                                className="h-11 sm:h-14 bg-slate-800 text-white border border-slate-700 rounded-xl hover:bg-slate-700 transition-all active:scale-95 group relative flex flex-col items-center justify-center pt-1"
                                             >
                                                 {s.sym === "/" ? (
-                                                    <div className="flex flex-col items-center justify-center -space-y-1.5 transform scale-90 mb-1">
-                                                        <span className="text-sm font-bold">a</span>
-                                                        <div className="w-4 h-0.5 bg-white rounded-full"></div>
-                                                        <span className="text-sm font-bold">b</span>
+                                                    <div className="flex flex-col items-center justify-center -space-y-1.5 transform scale-75 sm:scale-90 mb-1">
+                                                        <span className="text-xs sm:text-sm font-bold">a</span>
+                                                        <div className="w-3 sm:w-4 h-0.5 bg-white rounded-full"></div>
+                                                        <span className="text-xs sm:text-sm font-bold">b</span>
                                                     </div>
                                                 ) : (
-                                                    <span className="text-xl font-bold">{s.label}</span>
+                                                    <span className="text-lg sm:text-xl font-bold">{s.label}</span>
                                                 )}
-                                                <span className="text-[9px] text-slate-500 uppercase font-bold tracking-tighter opacity-0 group-hover:opacity-100 transition-opacity absolute bottom-1">{s.desc}</span>
+                                                <span className="hidden sm:inline text-[9px] text-slate-500 uppercase font-bold tracking-tighter opacity-0 group-hover:opacity-100 transition-opacity absolute bottom-1">{s.desc}</span>
                                             </button>
                                         ))}
                                         <button
@@ -908,7 +905,7 @@ function InstrumentContent() {
                                                 setEssayAnswers(newMap);
                                                 autoSaveEssay(newMap);
                                             }}
-                                            className="h-12 sm:h-14 bg-rose-600 text-white rounded-xl hover:bg-rose-700 transition-all active:scale-95 flex items-center justify-center font-bold col-span-2"
+                                            className="h-11 sm:h-14 bg-rose-600 text-white rounded-xl hover:bg-rose-700 transition-all active:scale-95 flex items-center justify-center font-bold col-span-2 text-xs sm:text-base"
                                         >
                                             HAPUS ⌫
                                         </button>
@@ -977,13 +974,29 @@ function InstrumentContent() {
                             <span className="text-xs text-slate-500 font-medium mt-1 inline-block bg-slate-50 px-2 py-1 rounded-md">
                                 {step === 1 && `${Object.keys(angket1).length} dari ${LINGKUNGAN_BELAJAR_Q.reduce((a, b) => a + b.qs.length, 0)} terjawab`}
                                 {step === 2 && `${Object.keys(angket2).length} dari ${EFIKASI_DIRI_Q.reduce((a, b) => a + b.qs.length, 0)} terjawab`}
-                                {step === 3 && `${Object.keys(essayAnswers).filter(k => (essayAnswers[parseInt(k)] || "").length >= 10).length} dari ${ESSAY_QUESTIONS.length} soal terjawab`}
+                                {step === 3 && `${ESSAY_QUESTIONS.filter((_, i) => {
+                                    const val = (essayAnswers[i] || "").trim();
+                                    if (!val) return false;
+                                    if (i === 6) { // Soal No 7 (Visualisasi)
+                                        const clean = val.replace(/\[VISUAL:.*?\]|\[TABLE\]|\[LINE-T\]|\[LINE-B\]|\[REASON\]|[:| \t\n\r]/g, "");
+                                        return clean.length > 0;
+                                    }
+                                    return val.length > 0;
+                                }).length} dari ${ESSAY_QUESTIONS.length} soal terjawab`}
                             </span>
                         </div>
                         <span className="text-xl sm:text-2xl font-black text-primary">
                             {step === 1 && Math.round((Object.keys(angket1).length / LINGKUNGAN_BELAJAR_Q.reduce((a, b) => a + b.qs.length, 0)) * 100) + "%"}
                             {step === 2 && Math.round((Object.keys(angket2).length / EFIKASI_DIRI_Q.reduce((a, b) => a + b.qs.length, 0)) * 100) + "%"}
-                            {step === 3 && Math.round((Object.keys(essayAnswers).filter(k => (essayAnswers[parseInt(k)] || "").length >= 10).length / ESSAY_QUESTIONS.length) * 100) + "%"}
+                            {step === 3 && Math.round((ESSAY_QUESTIONS.filter((_, i) => {
+                                const val = (essayAnswers[i] || "").trim();
+                                if (!val) return false;
+                                if (i === 6) {
+                                    const clean = val.replace(/\[VISUAL:.*?\]|\[TABLE\]|\[LINE-T\]|\[LINE-B\]|\[REASON\]|[:| \t\n\r]/g, "");
+                                    return clean.length > 0;
+                                }
+                                return val.length > 0;
+                            }).length / ESSAY_QUESTIONS.length) * 100) + "%"}
                         </span>
                     </div>
                     <div className="flex bg-slate-100 h-2.5 sm:h-3 rounded-full overflow-hidden shadow-inner">
@@ -992,7 +1005,15 @@ function InstrumentContent() {
                             style={{
                                 width: step === 1 ? `${(Object.keys(angket1).length / LINGKUNGAN_BELAJAR_Q.reduce((a, b) => a + b.qs.length, 0)) * 100}%`
                                     : step === 2 ? `${(Object.keys(angket2).length / EFIKASI_DIRI_Q.reduce((a, b) => a + b.qs.length, 0)) * 100}%`
-                                        : `${(Object.keys(essayAnswers).filter(k => (essayAnswers[parseInt(k)] || "").length >= 10).length / ESSAY_QUESTIONS.length) * 100}%`
+                                        : `${ESSAY_QUESTIONS.filter((_, i) => {
+                                            const val = (essayAnswers[i] || "").trim();
+                                            if (!val) return false;
+                                            if (i === 6) {
+                                                const clean = val.replace(/\[VISUAL:.*?\]|\[TABLE\]|\[LINE-T\]|\[LINE-B\]|\[REASON\]|[:| \t\n\r]/g, "");
+                                                return clean.length > 0;
+                                            }
+                                            return val.length > 0;
+                                        }).length / ESSAY_QUESTIONS.length * 100}%`
                             }}
                         />
                     </div>

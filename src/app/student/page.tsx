@@ -53,18 +53,41 @@ export default function StudentDashboard() {
     const isEssayDone = (() => {
         const ans = studentData.essay_answer;
         if (!ans) return false;
-        if (typeof ans === "string") return ans.trim().length >= 10;
-        const values = Object.values(ans) as string[];
-        return values.length >= ESSAY_QUESTIONS.length && values.every(v => v.trim().length >= 10);
+
+        // Use a consistent logic helper (inline for now)
+        const checkAnswered = (i: number, val: string) => {
+            const trimmed = (val || "").trim();
+            if (!trimmed) return false;
+            if (i === 6) { // Soal No 7
+                const clean = trimmed.replace(/\[VISUAL:.*?\]|\[TABLE\]|\[LINE-T\]|\[LINE-B\]|\[REASON\]|[:| \t\n\r]/g, "");
+                return clean.length > 0;
+            }
+            return trimmed.length > 0;
+        };
+
+        if (typeof ans === "string") return checkAnswered(0, ans);
+
+        // Check if all questions are answered according to the new logic
+        return ESSAY_QUESTIONS.every((_, i) => checkAnswered(i, ans[i] || ""));
     })();
 
     const essayProgress = (() => {
         const ans = studentData.essay_answer;
         if (!ans) return 0;
-        if (typeof ans === "string") return ans.trim().length > 0 ? (ans.trim().length >= 10 ? 100 : 50) : 0;
-        const values = Object.values(ans) as string[];
-        if (values.length === 0) return 0;
-        const answeredCount = values.filter(v => v.trim().length >= 10).length;
+
+        const checkAnswered = (i: number, val: string) => {
+            const trimmed = (val || "").trim();
+            if (!trimmed) return false;
+            if (i === 6) { // Soal No 7
+                const clean = trimmed.replace(/\[VISUAL:.*?\]|\[TABLE\]|\[LINE-T\]|\[LINE-B\]|\[REASON\]|[:| \t\n\r]/g, "");
+                return clean.length > 0;
+            }
+            return trimmed.length > 0;
+        };
+
+        if (typeof ans === "string") return checkAnswered(0, ans) ? 100 : 0;
+
+        const answeredCount = ESSAY_QUESTIONS.filter((_, i) => checkAnswered(i, ans[i] || "")).length;
         return (answeredCount / ESSAY_QUESTIONS.length) * 100;
     })();
 
