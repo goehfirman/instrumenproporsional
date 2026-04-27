@@ -616,7 +616,6 @@ export default function AdminDashboard() {
                             title="Klik untuk melihat teks pernyataan"
                         >Q{i + 1}</th>
                     ))}
-                    <th className="p-4 font-semibold text-center bg-slate-50 z-10 sticky right-0 shadow-[-1px_0_0_0_#f1f5f9]">Aksi</th>
                 </tr>
             );
         }
@@ -634,7 +633,6 @@ export default function AdminDashboard() {
                             title="Klik untuk melihat teks pernyataan"
                         >Q{i + 1}</th>
                     ))}
-                    <th className="p-4 font-semibold text-center bg-slate-50 z-10 sticky right-0 shadow-[-1px_0_0_0_#f1f5f9]">Aksi</th>
                 </tr>
             );
         }
@@ -1158,15 +1156,6 @@ export default function AdminDashboard() {
                                                             </div>
                                                         </td>
                                                     ))}
-                                                    <td className="p-2 text-center sticky right-0 bg-white z-10 shadow-[-1px_0_0_0_#f1f5f9]">
-                                                        <button
-                                                            onClick={() => handleDeleteStudent(s.id, s.name)}
-                                                            className="p-1.5 text-rose-600 hover:bg-rose-50 rounded-md transition-colors border border-rose-100"
-                                                            title="Hapus"
-                                                        >
-                                                            <Trash2 className="w-4 h-4" />
-                                                        </button>
-                                                    </td>
                                                 </tr>
                                             );
                                         }
@@ -1223,13 +1212,6 @@ export default function AdminDashboard() {
                                                             title="Evaluasi Detail"
                                                         >
                                                             <Edit className="w-5 h-5" />
-                                                        </button>
-                                                        <button
-                                                            onClick={() => handleDeleteStudent(s.id, s.name)}
-                                                            className="bg-rose-50 text-rose-600 hover:bg-rose-600 hover:text-white p-2 rounded-lg transition border border-rose-100"
-                                                            title="Hapus Responden"
-                                                        >
-                                                            <Trash2 className="w-5 h-5" />
                                                         </button>
                                                     </td>
                                                 </tr>
@@ -1396,167 +1378,172 @@ export default function AdminDashboard() {
                             </table>
                         </div>
                     </div>
-                )}
+                )
+                }
 
-                {popover && (
-                    <div
-                        className="fixed z-[100] bg-slate-800 text-white p-3 rounded-lg shadow-2xl text-sm font-medium w-64 md:w-72 leading-relaxed animate-in fade-in zoom-in-95 duration-200 pointer-events-none"
-                        style={{
-                            left: Math.min(popover.x, typeof window !== "undefined" ? window.innerWidth - 300 : popover.x),
-                            top: popover.y + 15
-                        }}
-                    >
-                        <span className="inline-block bg-white/20 text-white text-[10px] font-bold px-2 py-0.5 rounded mr-2 mb-1">
-                            {typeof popover.idx === 'number' ? `Butir ${popover.idx + 1}` : 'Interpretasi'}
-                        </span>
-                        <span>{popover.text}</span>
-                        <div className="absolute -top-2 left-4 border-8 border-transparent border-b-slate-800"></div>
-                    </div>
-                )}
-            </main>
+                {
+                    popover && (
+                        <div
+                            className="fixed z-[100] bg-slate-800 text-white p-3 rounded-lg shadow-2xl text-sm font-medium w-64 md:w-72 leading-relaxed animate-in fade-in zoom-in-95 duration-200 pointer-events-none"
+                            style={{
+                                left: Math.min(popover.x, typeof window !== "undefined" ? window.innerWidth - 300 : popover.x),
+                                top: popover.y + 15
+                            }}
+                        >
+                            <span className="inline-block bg-white/20 text-white text-[10px] font-bold px-2 py-0.5 rounded mr-2 mb-1">
+                                {typeof popover.idx === 'number' ? `Butir ${popover.idx + 1}` : 'Interpretasi'}
+                            </span>
+                            <span>{popover.text}</span>
+                            <div className="absolute -top-2 left-4 border-8 border-transparent border-b-slate-800"></div>
+                        </div>
+                    )
+                }
+            </main >
 
             {/* Grading Modal */}
-            {gradingModal && (
-                <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-in fade-in">
-                    <div className="bg-white rounded-3xl w-full max-w-5xl h-[80vh] flex flex-col overflow-hidden shadow-2xl">
-                        {/* Modal Header */}
-                        <div className="px-6 py-4 border-b border-slate-100 flex justify-between items-center bg-slate-50">
-                            <h3 className="font-bold text-lg text-slate-800">Verifikasi Instrumen - {gradingModal.name}</h3>
-                            <button
-                                onClick={() => { setGradingModal(null); setModalEssayIdx(0); }}
-                                className="text-slate-400 hover:text-slate-600 px-3 py-1 bg-white border border-slate-200 rounded-lg"
-                            >
-                                Tutup
-                            </button>
-                        </div>
-
-                        {/* Modal Body / Split Screen */}
-                        <div className="flex-1 flex flex-col md:flex-row overflow-hidden">
-                            {/* Left Screen: Student Answer */}
-                            <div className="flex-1 p-6 overflow-y-auto border-r border-slate-100 bg-white">
-                                <div className="flex justify-between items-center mb-4">
-                                    <h4 className="text-sm font-semibold text-slate-500 uppercase tracking-wide">Jawaban Tes (Esai)</h4>
-                                    <div className="flex gap-1">
-                                        {ESSAY_QUESTIONS.map((_, i) => (
-                                            <button
-                                                key={i}
-                                                onClick={() => {
-                                                    setModalEssayIdx(i);
-                                                    const essayScores = gradingModal.essay_scores || {};
-                                                    setScoreInput(essayScores[i] ?? "");
-                                                    setAiFeedback(null); // Clear feedback when switching questions
-                                                }}
-                                                className={`w-8 h-8 rounded-lg font-bold text-xs transition-all ${modalEssayIdx === i ? 'bg-primary text-white scale-110 shadow-md' : 'bg-slate-100 text-slate-400 hover:bg-slate-200'}`}
-                                            >
-                                                {i + 1}
-                                            </button>
-                                        ))}
-                                    </div>
-                                </div>
-
-                                <div className="bg-slate-50 p-4 rounded-xl border border-slate-100 mb-4 italic text-sm text-slate-600">
-                                    <span className="font-bold text-primary mr-2">SOAL {modalEssayIdx + 1}:</span>
-                                    {ESSAY_QUESTIONS[modalEssayIdx].text}
-                                </div>
-
-                                <div className="bg-blue-50 text-slate-800 p-6 rounded-xl min-h-[150px] border border-blue-100 leading-relaxed mb-6 font-medium shadow-inner">
-                                    <h5 className="text-[10px] font-black text-blue-400 uppercase tracking-widest mb-3">Jawaban Responden</h5>
-                                    {(() => {
-                                        const ans = typeof gradingModal.essay_answer === "string"
-                                            ? (modalEssayIdx === 0 ? gradingModal.essay_answer : null)
-                                            : gradingModal.essay_answer?.[modalEssayIdx];
-                                        return renderRespondentAnswer(ans || "", ESSAY_QUESTIONS[modalEssayIdx].id);
-                                    })()}
-                                </div>
-
-                                {/* Scoring Rubric for Admin */}
-                                <div className="bg-slate-900 text-white p-6 rounded-2xl shadow-lg mb-8">
-                                    <h4 className="text-xs font-black text-slate-400 uppercase tracking-widest mb-4">Rambu-rambu Jawaban {modalEssayIdx + 1}</h4>
-                                    <div className="space-y-3">
-                                        {ESSAY_QUESTIONS[modalEssayIdx].rubric.map((r, idx) => (
-                                            <div key={idx} className="flex gap-3 items-start border-l-2 border-primary/50 pl-4 py-1">
-                                                <span className="text-white/90 text-sm leading-relaxed">{r}</span>
-                                            </div>
-                                        ))}
-                                    </div>
-                                    <div className="mt-6 pt-4 border-t border-white/10 flex justify-between text-[10px] text-white/40 font-bold">
-                                        <span>MATERI: {ESSAY_QUESTIONS[modalEssayIdx].subject}</span>
-                                        <span>LEVEL: {ESSAY_QUESTIONS[modalEssayIdx].cognitiveLevel}</span>
-                                    </div>
-                                </div>
-
-                                <hr className="border-slate-100 mb-8" />
-
-                                <div className="mb-6">
-                                    <h3 className="text-sm font-bold text-slate-400 uppercase tracking-widest mb-6 flex items-center gap-2">
-                                        <div className="w-4 h-[2px] bg-slate-200"></div>
-                                        Data Triangulasi (Skala)
-                                    </h3>
-
-                                    {renderAngketList("Lingkungan Belajar", calculateScore(gradingModal.angkets_1), 215, gradingModal.angkets_1, LINGKUNGAN_BELAJAR_Q, false)}
-
-                                    {renderAngketList("Efikasi Diri", calculateScore(gradingModal.angkets_2), 205, gradingModal.angkets_2, EFIKASI_DIRI_Q, true)}
-
-                                </div>
+            {
+                gradingModal && (
+                    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-in fade-in">
+                        <div className="bg-white rounded-3xl w-full max-w-5xl h-[80vh] flex flex-col overflow-hidden shadow-2xl">
+                            {/* Modal Header */}
+                            <div className="px-6 py-4 border-b border-slate-100 flex justify-between items-center bg-slate-50">
+                                <h3 className="font-bold text-lg text-slate-800">Verifikasi Instrumen - {gradingModal.name}</h3>
+                                <button
+                                    onClick={() => { setGradingModal(null); setModalEssayIdx(0); }}
+                                    className="text-slate-400 hover:text-slate-600 px-3 py-1 bg-white border border-slate-200 rounded-lg"
+                                >
+                                    Tutup
+                                </button>
                             </div>
 
-                            {/* Right Screen: Assessment */}
-                            <div className="w-full md:w-96 p-6 bg-slate-50 flex flex-col overflow-y-auto max-h-[80vh]">
-                                <h4 className="text-sm font-semibold text-slate-500 mb-4 uppercase tracking-wide">Penilaian (0-4)</h4>
-
-                                <div className="mb-8 p-4 bg-white border border-slate-200 rounded-xl">
-                                    <label className="block text-slate-700 font-bold mb-2">Skor Manual</label>
-                                    <input
-                                        type="number"
-                                        min="0" max="4"
-                                        value={scoreInput}
-                                        onChange={(e) => {
-                                            const val = e.target.value === "" ? "" : Number(e.target.value);
-                                            setScoreInput(val);
-                                            if (gradingModal) {
-                                                performSave(gradingModal.id, modalEssayIdx, val);
-                                            }
-                                        }}
-                                        className="w-full text-center text-4xl p-4 border-2 border-slate-200 rounded-xl focus:border-primary focus:ring-4 focus:ring-primary/20 outline-none transition-all"
-                                        placeholder="-"
-                                    />
-                                </div>
-
-                                <hr className="border-slate-200 mb-8" />
-                                <div className="mb-auto">
-                                    <button
-                                        onClick={() => {
-                                            const ans = modalEssayIdx === 0 && typeof gradingModal.essay_answer === "string"
-                                                ? gradingModal.essay_answer
-                                                : gradingModal.essay_answer?.[modalEssayIdx];
-                                            handleAIGrading(ans || "");
-                                        }}
-                                        disabled={!gradingModal.essay_answer || gradingLoading}
-                                        className="w-full bg-gradient-to-r from-purple-500 to-indigo-600 hover:from-purple-600 hover:to-indigo-700 text-white font-bold py-3 px-4 rounded-xl transition shadow-md flex justify-center items-center gap-2 disabled:opacity-50"
-                                    >
-                                        <Sparkles className={`w-5 h-5 ${gradingLoading ? 'animate-spin' : ''}`} />
-                                        {gradingLoading ? "Menganalisis..." : "Koreksi dgn AI"}
-                                    </button>
-
-                                    {aiFeedback && (
-                                        <div className="mt-4 p-5 bg-purple-50 border border-purple-200 border-l-4 border-l-purple-500 rounded-xl">
-                                            <h5 className="text-xs font-black text-purple-500 uppercase tracking-widest mb-2">Petunjuk Koreksi</h5>
-                                            <p className="text-sm text-purple-900 leading-relaxed">{aiFeedback}</p>
+                            {/* Modal Body / Split Screen */}
+                            <div className="flex-1 flex flex-col md:flex-row overflow-hidden">
+                                {/* Left Screen: Student Answer */}
+                                <div className="flex-1 p-6 overflow-y-auto border-r border-slate-100 bg-white">
+                                    <div className="flex justify-between items-center mb-4">
+                                        <h4 className="text-sm font-semibold text-slate-500 uppercase tracking-wide">Jawaban Tes (Esai)</h4>
+                                        <div className="flex gap-1">
+                                            {ESSAY_QUESTIONS.map((_, i) => (
+                                                <button
+                                                    key={i}
+                                                    onClick={() => {
+                                                        setModalEssayIdx(i);
+                                                        const essayScores = gradingModal.essay_scores || {};
+                                                        setScoreInput(essayScores[i] ?? "");
+                                                        setAiFeedback(null); // Clear feedback when switching questions
+                                                    }}
+                                                    className={`w-8 h-8 rounded-lg font-bold text-xs transition-all ${modalEssayIdx === i ? 'bg-primary text-white scale-110 shadow-md' : 'bg-slate-100 text-slate-400 hover:bg-slate-200'}`}
+                                                >
+                                                    {i + 1}
+                                                </button>
+                                            ))}
                                         </div>
-                                    )}
-                                    <p className="text-xs text-slate-400 mt-3 text-center">
-                                        Fungsi auto-grading menggunakan Google Gemini.
-                                    </p>
+                                    </div>
+
+                                    <div className="bg-slate-50 p-4 rounded-xl border border-slate-100 mb-4 italic text-sm text-slate-600">
+                                        <span className="font-bold text-primary mr-2">SOAL {modalEssayIdx + 1}:</span>
+                                        {ESSAY_QUESTIONS[modalEssayIdx].text}
+                                    </div>
+
+                                    <div className="bg-blue-50 text-slate-800 p-6 rounded-xl min-h-[150px] border border-blue-100 leading-relaxed mb-6 font-medium shadow-inner">
+                                        <h5 className="text-[10px] font-black text-blue-400 uppercase tracking-widest mb-3">Jawaban Responden</h5>
+                                        {(() => {
+                                            const ans = typeof gradingModal.essay_answer === "string"
+                                                ? (modalEssayIdx === 0 ? gradingModal.essay_answer : null)
+                                                : gradingModal.essay_answer?.[modalEssayIdx];
+                                            return renderRespondentAnswer(ans || "", ESSAY_QUESTIONS[modalEssayIdx].id);
+                                        })()}
+                                    </div>
+
+                                    {/* Scoring Rubric for Admin */}
+                                    <div className="bg-slate-900 text-white p-6 rounded-2xl shadow-lg mb-8">
+                                        <h4 className="text-xs font-black text-slate-400 uppercase tracking-widest mb-4">Rambu-rambu Jawaban {modalEssayIdx + 1}</h4>
+                                        <div className="space-y-3">
+                                            {ESSAY_QUESTIONS[modalEssayIdx].rubric.map((r, idx) => (
+                                                <div key={idx} className="flex gap-3 items-start border-l-2 border-primary/50 pl-4 py-1">
+                                                    <span className="text-white/90 text-sm leading-relaxed">{r}</span>
+                                                </div>
+                                            ))}
+                                        </div>
+                                        <div className="mt-6 pt-4 border-t border-white/10 flex justify-between text-[10px] text-white/40 font-bold">
+                                            <span>MATERI: {ESSAY_QUESTIONS[modalEssayIdx].subject}</span>
+                                            <span>LEVEL: {ESSAY_QUESTIONS[modalEssayIdx].cognitiveLevel}</span>
+                                        </div>
+                                    </div>
+
+                                    <hr className="border-slate-100 mb-8" />
+
+                                    <div className="mb-6">
+                                        <h3 className="text-sm font-bold text-slate-400 uppercase tracking-widest mb-6 flex items-center gap-2">
+                                            <div className="w-4 h-[2px] bg-slate-200"></div>
+                                            Data Triangulasi (Skala)
+                                        </h3>
+
+                                        {renderAngketList("Lingkungan Belajar", calculateScore(gradingModal.angkets_1), 215, gradingModal.angkets_1, LINGKUNGAN_BELAJAR_Q, false)}
+
+                                        {renderAngketList("Efikasi Diri", calculateScore(gradingModal.angkets_2), 205, gradingModal.angkets_2, EFIKASI_DIRI_Q, true)}
+
+                                    </div>
                                 </div>
 
-                                <div className="mt-6 p-4 bg-emerald-50 border border-emerald-100 rounded-xl flex items-center justify-center gap-2 text-emerald-600 font-bold text-xs animate-in fade-in slide-in-from-bottom-1">
-                                    <CheckCircle className="w-4 h-4" /> Skor Tersimpan Otomatis
+                                {/* Right Screen: Assessment */}
+                                <div className="w-full md:w-96 p-6 bg-slate-50 flex flex-col overflow-y-auto max-h-[80vh]">
+                                    <h4 className="text-sm font-semibold text-slate-500 mb-4 uppercase tracking-wide">Penilaian (0-4)</h4>
+
+                                    <div className="mb-8 p-4 bg-white border border-slate-200 rounded-xl">
+                                        <label className="block text-slate-700 font-bold mb-2">Skor Manual</label>
+                                        <input
+                                            type="number"
+                                            min="0" max="4"
+                                            value={scoreInput}
+                                            onChange={(e) => {
+                                                const val = e.target.value === "" ? "" : Number(e.target.value);
+                                                setScoreInput(val);
+                                                if (gradingModal) {
+                                                    performSave(gradingModal.id, modalEssayIdx, val);
+                                                }
+                                            }}
+                                            className="w-full text-center text-4xl p-4 border-2 border-slate-200 rounded-xl focus:border-primary focus:ring-4 focus:ring-primary/20 outline-none transition-all"
+                                            placeholder="-"
+                                        />
+                                    </div>
+
+                                    <hr className="border-slate-200 mb-8" />
+                                    <div className="mb-auto">
+                                        <button
+                                            onClick={() => {
+                                                const ans = modalEssayIdx === 0 && typeof gradingModal.essay_answer === "string"
+                                                    ? gradingModal.essay_answer
+                                                    : gradingModal.essay_answer?.[modalEssayIdx];
+                                                handleAIGrading(ans || "");
+                                            }}
+                                            disabled={!gradingModal.essay_answer || gradingLoading}
+                                            className="w-full bg-gradient-to-r from-purple-500 to-indigo-600 hover:from-purple-600 hover:to-indigo-700 text-white font-bold py-3 px-4 rounded-xl transition shadow-md flex justify-center items-center gap-2 disabled:opacity-50"
+                                        >
+                                            <Sparkles className={`w-5 h-5 ${gradingLoading ? 'animate-spin' : ''}`} />
+                                            {gradingLoading ? "Menganalisis..." : "Koreksi dgn AI"}
+                                        </button>
+
+                                        {aiFeedback && (
+                                            <div className="mt-4 p-5 bg-purple-50 border border-purple-200 border-l-4 border-l-purple-500 rounded-xl">
+                                                <h5 className="text-xs font-black text-purple-500 uppercase tracking-widest mb-2">Petunjuk Koreksi</h5>
+                                                <p className="text-sm text-purple-900 leading-relaxed">{aiFeedback}</p>
+                                            </div>
+                                        )}
+                                        <p className="text-xs text-slate-400 mt-3 text-center">
+                                            Fungsi auto-grading menggunakan Google Gemini.
+                                        </p>
+                                    </div>
+
+                                    <div className="mt-6 p-4 bg-emerald-50 border border-emerald-100 rounded-xl flex items-center justify-center gap-2 text-emerald-600 font-bold text-xs animate-in fade-in slide-in-from-bottom-1">
+                                        <CheckCircle className="w-4 h-4" /> Skor Tersimpan Otomatis
+                                    </div>
                                 </div>
                             </div>
                         </div>
                     </div>
-                </div>
-            )}
-        </div>
+                )
+            }
+        </div >
     );
 }
