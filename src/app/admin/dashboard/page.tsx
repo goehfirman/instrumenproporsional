@@ -474,6 +474,48 @@ export default function AdminDashboard() {
         return { label: "Rendah", color: "bg-rose-100 text-rose-700 border-rose-200", desc: "Interpretasi Rendah: Responden memiliki persepsi/keyakinan yang cenderung kurang kondusif dan memerlukan perhatian lebih mendalam." };
     };
 
+    const exportInstrumentBlueprint = () => {
+        const blueprintHeader = ["No", "Butir Pernyataan", "Dimensi", "Favorabilitas (+/-)"];
+
+        // 1. Lingkungan Belajar
+        const envNegative = [2, 3, 6, 7, 10, 11, 14, 15, 18, 19, 22, 23, 26, 27, 30, 31, 34, 35, 40, 41, 42];
+        const envBlueprintData: any[] = [];
+        let envGlobalIdx = 0;
+        LINGKUNGAN_BELAJAR_Q.forEach(dim => {
+            dim.qs.forEach(q => {
+                envBlueprintData.push([
+                    envGlobalIdx + 1,
+                    q,
+                    dim.dimensi,
+                    envNegative.includes(envGlobalIdx) ? "(-)" : "(+)"
+                ]);
+                envGlobalIdx++;
+            });
+        });
+
+        // 2. Efikasi Diri
+        const efiNegative = [4, 5, 6, 7, 12, 13, 14, 15, 20, 21, 22, 23, 28, 29, 30, 31, 36, 37, 38, 39, 40];
+        const efiBlueprintData: any[] = [];
+        let efiGlobalIdx = 0;
+        EFIKASI_DIRI_Q.forEach(dim => {
+            dim.qs.forEach(q => {
+                efiBlueprintData.push([
+                    efiGlobalIdx + 1,
+                    q,
+                    dim.dimensi,
+                    efiNegative.includes(efiGlobalIdx) ? "(-)" : "(+)"
+                ]);
+                efiGlobalIdx++;
+            });
+        });
+
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet([blueprintHeader, ...envBlueprintData]), "Skala Lingkungan");
+        XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet([blueprintHeader, ...efiBlueprintData]), "Skala Efikasi Diri");
+
+        XLSX.writeFile(wb, "Blueprint_Pernyataan_Instrumen.xlsx");
+    };
+
     const exportExcel = () => {
         // 1. Rekapitulasi Global (Simplified)
         const recapHeaders = [
@@ -1062,9 +1104,14 @@ export default function AdminDashboard() {
                             </button>
                         </div>
                     </div>
-                    <button onClick={exportExcel} className="flex items-center gap-2 bg-white border border-slate-200 text-slate-700 hover:bg-slate-50 px-4 py-2 rounded-lg transition shadow-sm font-medium">
-                        <Download className="w-4 h-4" /> Export Laporan (Excel)
-                    </button>
+                    <div className="flex gap-2">
+                        <button onClick={exportInstrumentBlueprint} className="flex items-center gap-2 bg-indigo-50 border border-indigo-100 text-indigo-700 hover:bg-indigo-600 hover:text-white px-4 py-2 rounded-lg transition shadow-sm font-bold text-sm">
+                            <Download className="w-4 h-4" /> Download Blueprint
+                        </button>
+                        <button onClick={exportExcel} className="flex items-center gap-2 bg-white border border-slate-200 text-slate-700 hover:bg-slate-50 px-4 py-2 rounded-lg transition shadow-sm font-medium">
+                            <Download className="w-4 h-4" /> Export Laporan (Excel)
+                        </button>
+                    </div>
                 </div>
 
                 {activeView === "Settings" ? (
