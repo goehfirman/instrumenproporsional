@@ -1,11 +1,11 @@
 ﻿"use client";
 
 import { useEffect, useState } from "react";
-import { collection, getDocs, doc, updateDoc, onSnapshot } from "firebase/firestore";
+import { collection, getDocs, doc, updateDoc, onSnapshot, deleteDoc } from "firebase/firestore";
 import { onAuthStateChanged, signOut } from "firebase/auth";
 import { db, auth } from "@/lib/firebase";
 import { useRouter } from "next/navigation";
-import { Users, BookOpen, CheckCircle, Download, LogOut, Edit, Eye, Trash2, Search, Filter, AlertTriangle, Sparkles, Zap, Wand2, Settings, Flag, Home, BrainCircuit } from "lucide-react";
+import { Users, BookOpen, CheckCircle, Download, LogOut, Edit, Eye, Trash2, Search, Filter, AlertTriangle, Sparkles, Zap, Wand2, Settings, Flag, Home, BrainCircuit, ArrowUpDown, ArrowUp, ArrowDown } from "lucide-react";
 import * as XLSX from "xlsx";
 import { LINGKUNGAN_BELAJAR_Q, EFIKASI_DIRI_Q, TES_SOAL, ESSAY_QUESTIONS } from "@/lib/constants";
 
@@ -17,6 +17,7 @@ interface Student {
     angkets_2?: Record<number, number>;
     essay_answer?: string | Record<number, string>;
     essay_scores?: Record<number, number>;
+    lastUpdated?: string;
     completion_time_ms?: number;
 }
 
@@ -29,6 +30,7 @@ export default function AdminDashboard() {
     const [scoreInput, setScoreInput] = useState<number | "">("");
     const [activeView, setActiveView] = useState<"Rekap" | "Lingkungan" | "Efikasi" | "Evaluasi" | "Settings">("Rekap");
     const [popover, setPopover] = useState<{ text: string, x: number, y: number, idx: number | string } | null>(null);
+    const [sortConfig, setSortConfig] = useState<{ key: 'name' | 'lastUpdated'; direction: 'asc' | 'desc' } | null>(null);
 
     // Manual API Config States
     const [customApiKey, setCustomApiKey] = useState("");
@@ -246,6 +248,35 @@ export default function AdminDashboard() {
             </div>
         );
     };
+
+    const handleSort = (key: 'name' | 'lastUpdated') => {
+        let direction: 'asc' | 'desc' = 'asc';
+        if (sortConfig && sortConfig.key === key && sortConfig.direction === 'asc') {
+            direction = 'desc';
+        }
+        setSortConfig({ key, direction });
+    };
+
+    const getSortedStudents = () => {
+        if (!sortConfig) return students;
+
+        return [...students].sort((a, b) => {
+            if (sortConfig.key === 'name') {
+                const nameA = (a.name || "").toUpperCase();
+                const nameB = (b.name || "").toUpperCase();
+                if (nameA < nameB) return sortConfig.direction === 'asc' ? -1 : 1;
+                if (nameA > nameB) return sortConfig.direction === 'asc' ? 1 : -1;
+                return 0;
+            } else if (sortConfig.key === 'lastUpdated') {
+                const dateA = a.lastUpdated ? new Date(a.lastUpdated).getTime() : 0;
+                const dateB = b.lastUpdated ? new Date(b.lastUpdated).getTime() : 0;
+                return sortConfig.direction === 'asc' ? dateA - dateB : dateB - dateA;
+            }
+            return 0;
+        });
+    };
+
+    const sortedStudents = getSortedStudents();
 
     const saveSettings = () => {
         if (!customApiKey.trim()) {
@@ -557,10 +588,26 @@ export default function AdminDashboard() {
         const envQs = LINGKUNGAN_BELAJAR_Q.flatMap(d => d.qs);
         const efiQs = EFIKASI_DIRI_Q.flatMap(d => d.qs);
 
+        const SortButton = ({ label, sortKey }: { label: string, sortKey: 'name' | 'lastUpdated' }) => (
+            <button
+                onClick={() => handleSort(sortKey)}
+                className="flex items-center gap-1 hover:text-primary transition-colors group"
+            >
+                {label}
+                {sortConfig?.key === sortKey ? (
+                    sortConfig.direction === 'asc' ? <ArrowUp className="w-3 h-3" /> : <ArrowDown className="w-3 h-3" />
+                ) : (
+                    <ArrowUpDown className="w-3 h-3 text-slate-300 group-hover:text-primary/50" />
+                )}
+            </button>
+        );
+
         if (activeView === "Lingkungan") {
             return (
                 <tr>
-                    <th className="p-4 font-semibold text-left sticky left-0 bg-slate-50 z-20 shadow-[1px_0_0_0_#f1f5f9]">Nama Lengkap</th>
+                    <th className="p-4 font-semibold text-left sticky left-0 bg-slate-50 z-20 shadow-[1px_0_0_0_#f1f5f9]">
+                        <SortButton label="Nama Lengkap" sortKey="name" />
+                    </th>
                     <th className="p-4 font-semibold text-center border-r border-slate-200 bg-slate-50 z-10">Total</th>
                     {Array.from({ length: 43 }).map((_, i) => (
                         <th key={i}
@@ -569,13 +616,16 @@ export default function AdminDashboard() {
                             title="Klik untuk melihat teks pernyataan"
                         >Q{i + 1}</th>
                     ))}
+                    <th className="p-4 font-semibold text-center bg-slate-50 z-10 sticky right-0 shadow-[-1px_0_0_0_#f1f5f9]">Aksi</th>
                 </tr>
             );
         }
         if (activeView === "Efikasi") {
             return (
                 <tr>
-                    <th className="p-4 font-semibold text-left sticky left-0 bg-slate-50 z-20 shadow-[1px_0_0_0_#f1f5f9]">Nama Lengkap</th>
+                    <th className="p-4 font-semibold text-left sticky left-0 bg-slate-50 z-20 shadow-[1px_0_0_0_#f1f5f9]">
+                        <SortButton label="Nama Lengkap" sortKey="name" />
+                    </th>
                     <th className="p-4 font-semibold text-center border-r border-slate-200 bg-slate-50 z-10">Total</th>
                     {Array.from({ length: 41 }).map((_, i) => (
                         <th key={i}
@@ -584,13 +634,16 @@ export default function AdminDashboard() {
                             title="Klik untuk melihat teks pernyataan"
                         >Q{i + 1}</th>
                     ))}
+                    <th className="p-4 font-semibold text-center bg-slate-50 z-10 sticky right-0 shadow-[-1px_0_0_0_#f1f5f9]">Aksi</th>
                 </tr>
             );
         }
         if (activeView === "Evaluasi") {
             return (
                 <tr>
-                    <th className="p-4 font-semibold text-left">Nama Lengkap</th>
+                    <th className="p-4 font-semibold text-left">
+                        <SortButton label="Nama Lengkap" sortKey="name" />
+                    </th>
                     {ESSAY_QUESTIONS.map(q => (
                         <th key={q.id} className="p-4 font-semibold text-center">Soal {q.id}</th>
                     ))}
@@ -602,7 +655,12 @@ export default function AdminDashboard() {
         }
         return (
             <tr>
-                <th className="p-4 font-semibold text-left">Nama</th>
+                <th className="p-4 font-semibold text-left">
+                    <SortButton label="Nama" sortKey="name" />
+                </th>
+                <th className="p-4 font-semibold text-center">
+                    <SortButton label="Waktu" sortKey="lastUpdated" />
+                </th>
                 <th className="p-4 font-semibold text-center">Kualitas Lingk.</th>
                 <th className="p-4 font-semibold text-center">Kualitas Efi.</th>
                 <th className="p-4 font-semibold text-center">Lingk.</th>
@@ -614,14 +672,29 @@ export default function AdminDashboard() {
         );
     };
 
-    const handleDeleteStudent = (id: string, name: string) => {
+    const handleDeleteStudent = async (id: string, name: string) => {
+        if (!id) {
+            alert("Error: ID responden tidak ditemukan.");
+            return;
+        }
         if (confirm(`Apakah Anda yakin ingin menghapus respon dari "${name}"? Tindakan ini tidak dapat dibatalkan.`)) {
-            const localData = localStorage.getItem("localStudentsData");
-            if (localData) {
-                const studentsMap = JSON.parse(localData);
-                delete studentsMap[id];
-                localStorage.setItem("localStudentsData", JSON.stringify(studentsMap));
-                setStudents(Object.values(studentsMap));
+            try {
+                console.log("Attempting to delete student with ID:", id);
+                const studentRef = doc(db, "students", id);
+                await deleteDoc(studentRef);
+
+                // Also clean up local storage if it was ever used as a cache
+                const localData = localStorage.getItem("localStudentsData");
+                if (localData) {
+                    const studentsMap = JSON.parse(localData);
+                    delete studentsMap[id];
+                    localStorage.setItem("localStudentsData", JSON.stringify(studentsMap));
+                }
+
+                alert(`Data responden "${name}" telah berhasil dihapus dari cloud.`);
+            } catch (err: any) {
+                console.error("Firebase delete failed:", err);
+                alert(`Gagal menghapus data: ${err.message || "Kesalahan pada server Firestore"}`);
             }
         }
     };
@@ -842,7 +915,7 @@ export default function AdminDashboard() {
             }
 
             // Save all scores at once
-            const studentRef = doc(db, "respondents", gradingModal.id);
+            const studentRef = doc(db, "students", gradingModal.id);
             await updateDoc(studentRef, {
                 essay_scores: currentScores,
                 status_progres: 4 // Mark as fully graded if desired or just update
@@ -877,7 +950,7 @@ export default function AdminDashboard() {
 
         setGradingLoading(true);
         try {
-            const studentRef = doc(db, "respondents", gradingModal.id);
+            const studentRef = doc(db, "students", gradingModal.id);
             await updateDoc(studentRef, {
                 essay_scores: {},
             });
@@ -1059,12 +1132,12 @@ export default function AdminDashboard() {
                                     {renderTableHeaders()}
                                 </thead>
                                 <tbody className="divide-y divide-slate-100/60">
-                                    {students.length === 0 && (
+                                    {sortedStudents.length === 0 && (
                                         <tr>
                                             <td colSpan={100} className="p-8 text-center text-slate-500">Belum ada data responden.</td>
                                         </tr>
                                     )}
-                                    {students.map((s) => {
+                                    {sortedStudents.map((s) => {
                                         if (activeView === "Lingkungan" || activeView === "Efikasi") {
                                             const isEnv = activeView === "Lingkungan";
                                             const len = isEnv ? 43 : 41;
@@ -1085,6 +1158,15 @@ export default function AdminDashboard() {
                                                             </div>
                                                         </td>
                                                     ))}
+                                                    <td className="p-2 text-center sticky right-0 bg-white z-10 shadow-[-1px_0_0_0_#f1f5f9]">
+                                                        <button
+                                                            onClick={() => handleDeleteStudent(s.id, s.name)}
+                                                            className="p-1.5 text-rose-600 hover:bg-rose-50 rounded-md transition-colors border border-rose-100"
+                                                            title="Hapus"
+                                                        >
+                                                            <Trash2 className="w-4 h-4" />
+                                                        </button>
+                                                    </td>
                                                 </tr>
                                             );
                                         }
@@ -1142,6 +1224,13 @@ export default function AdminDashboard() {
                                                         >
                                                             <Edit className="w-5 h-5" />
                                                         </button>
+                                                        <button
+                                                            onClick={() => handleDeleteStudent(s.id, s.name)}
+                                                            className="bg-rose-50 text-rose-600 hover:bg-rose-600 hover:text-white p-2 rounded-lg transition border border-rose-100"
+                                                            title="Hapus Responden"
+                                                        >
+                                                            <Trash2 className="w-5 h-5" />
+                                                        </button>
                                                     </td>
                                                 </tr>
                                             );
@@ -1154,6 +1243,9 @@ export default function AdminDashboard() {
                                         return (
                                             <tr key={s.id} className="hover:bg-slate-50/50 transition-colors">
                                                 <td className="p-4 font-medium text-slate-800">{s.name}</td>
+                                                <td className="p-4 text-center text-[10px] text-slate-500 font-mono">
+                                                    {s.lastUpdated ? new Date(s.lastUpdated).toLocaleString('id-ID', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' }) : "-"}
+                                                </td>
                                                 <td className="p-4 text-center">
                                                     {envComplete ? (
                                                         <div className="flex justify-center gap-1">
