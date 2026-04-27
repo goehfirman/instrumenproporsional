@@ -101,7 +101,7 @@ export default function StudentDashboard() {
                         <div className="flex justify-between items-start">
                             <div>
                                 <h1 className="text-3xl font-bold mb-2">Halo, {studentName}! 👋</h1>
-                                <p className="text-white/80">Selamat datang di Portal Penelitian Matematika.</p>
+                                <p className="text-white/80">Selamat datang di Portal Instrumen Penelitian.</p>
                             </div>
                             <button
                                 onClick={handleLogout}
