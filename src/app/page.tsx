@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { collection, query, where, getDocs, addDoc } from "firebase/firestore";
+import { collection, query, where, getDocs, setDoc, doc } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { Loader2 } from "lucide-react";
 
@@ -13,37 +13,65 @@ export default function StudentLogin() {
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!name.trim()) return;
+    const cleanName = name.trim().toUpperCase();
+    if (!cleanName) return;
 
     setLoading(true);
     try {
-      // Bypassing Firebase temporarily
-      const studentId = "local-" + Date.now();
-      sessionStorage.setItem("studentId", studentId);
-      sessionStorage.setItem("studentName", name.trim().toUpperCase());
+      let studentId = "";
+      let existingData: any = null;
 
-      // Read local progress or default to 1
+      // 1. Try to find existing student in Firestore
+      if (db) {
+        const q = query(collection(db, "students"), where("name", "==", cleanName));
+        const querySnapshot = await getDocs(q);
+
+        if (!querySnapshot.empty) {
+          const docSnap = querySnapshot.docs[0];
+          studentId = docSnap.id;
+          existingData = docSnap.data();
+        }
+      }
+
+      // 2. If not found in cloud, check local (migration) or create new
+      if (!studentId) {
+        const localData = localStorage.getItem("localStudentsData");
+        const students = localData ? JSON.parse(localData) : {};
+        const localStudent = Object.values(students).find((s: any) => s.name === cleanName);
+
+        if (localStudent) {
+          studentId = (localStudent as any).id;
+          existingData = localStudent;
+        } else {
+          studentId = "std-" + Date.now();
+          existingData = {
+            id: studentId,
+            name: cleanName,
+            createdAt: new Date().toISOString(),
+            status_progres: 0
+          };
+        }
+
+        // Initial Sync to Cloud if new or migration
+        if (db) {
+          await setDoc(doc(db, "students", studentId), existingData);
+        }
+      }
+
+      // 3. Save to Session/LocalStorage
+      sessionStorage.setItem("studentId", studentId);
+      sessionStorage.setItem("studentName", cleanName);
+      localStorage.setItem(`start_${studentId}`, Date.now().toString());
+
       const localData = localStorage.getItem("localStudentsData");
       let students = localData ? JSON.parse(localData) : {};
-
-      // Simple lookup by name
-      const existingStudent = Object.values(students).find((s: any) => s.name === name.trim().toUpperCase());
-
-      if (existingStudent) {
-        sessionStorage.setItem("studentId", (existingStudent as any).id);
-      } else {
-        students[studentId] = {
-          id: studentId,
-          name: name.trim().toUpperCase(),
-          status_progres: 0,
-          createdAt: new Date().toISOString()
-        };
-        localStorage.setItem("localStudentsData", JSON.stringify(students));
-      }
+      students[studentId] = { ...existingData, lastLogin: new Date().toISOString() };
+      localStorage.setItem("localStudentsData", JSON.stringify(students));
 
       router.push("/student");
     } catch (error) {
-      console.error("Error logging in: ", error);
+      console.error("Login error:", error);
+      alert("Terjadi kesalahan saat masuk. Silakan coba lagi.");
     } finally {
       setLoading(false);
     }

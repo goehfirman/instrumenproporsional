@@ -4,6 +4,8 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { ClipboardList, BookOpen, BrainCircuit, CheckCircle, ArrowRight, LogOut } from "lucide-react";
 import { ESSAY_QUESTIONS } from "@/lib/constants";
+import { db } from "@/lib/firebase";
+import { doc, getDoc, onSnapshot } from "firebase/firestore";
 
 interface StudentData {
     angkets_1?: Record<number, number>;
@@ -15,6 +17,7 @@ export default function StudentDashboard() {
     const router = useRouter();
     const [studentName, setStudentName] = useState("");
     const [studentData, setStudentData] = useState<StudentData>({});
+    const [loading, setLoading] = useState(true);
 
     useEffect(() => {
         const sId = sessionStorage.getItem("studentId");
@@ -27,13 +30,32 @@ export default function StudentDashboard() {
 
         setStudentName(sName || "");
 
+        // 1. Real-time Cloud Sync
+        let unsub = () => { };
+        if (db) {
+            unsub = onSnapshot(doc(db, "students", sId), (docSnap) => {
+                if (docSnap.exists()) {
+                    setStudentData(docSnap.data());
+                    setLoading(false);
+                }
+            });
+        }
+
+        // 2. Local Fallback (immediate UI if cloud slow)
         const localData = localStorage.getItem("localStudentsData");
         if (localData) {
             const students = JSON.parse(localData);
             if (students[sId]) {
                 setStudentData(students[sId]);
+                // We show local immediately but keep loading=true 
+                // until cloud snapshot overwrites it if needed
+                if (!db) setLoading(false);
             }
+        } else {
+            if (!db) setLoading(false);
         }
+
+        return () => unsub();
     }, [router]);
 
     const handleLogout = () => {

@@ -2,7 +2,7 @@
 
 import { useSearchParams, useRouter } from "next/navigation";
 import { useEffect, useState, Suspense } from "react";
-import { doc, getDoc, updateDoc } from "firebase/firestore";
+import { doc, getDoc, updateDoc, setDoc } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { Loader2, Save, Home, BrainCircuit, CheckCircle } from "lucide-react";
 import { useRef } from "react";
@@ -51,9 +51,32 @@ function InstrumentContent() {
         const stepNum = stepParam ? parseInt(stepParam) : 1;
         setStep(stepNum);
 
-        // Fetch exiting data from localStorage instead of Firebase
+        // Fetch exiting data from Firestore first, then localStorage fallback
         const fetchData = async () => {
             try {
+                // Try Firebase first
+                if (db) {
+                    const docRef = doc(db, "students", sId);
+                    const docSnap = await getDoc(docRef);
+                    if (docSnap.exists()) {
+                        const data = docSnap.data();
+                        if (data.angkets_1) setAngket1(data.angkets_1);
+                        if (data.angkets_2) setAngket2(data.angkets_2);
+                        if (data.essay_answer) {
+                            if (typeof data.essay_answer === "string") {
+                                setEssayAnswers({ 0: data.essay_answer });
+                            } else {
+                                setEssayAnswers(data.essay_answer);
+                            }
+                        }
+                        // If we have cloud data, we can skip local storage, 
+                        // but let's sync them to be safe
+                        localStorage.setItem(`cloud_sync_${sId}`, "true");
+                        return;
+                    }
+                }
+
+                // Fallback to local
                 const localData = localStorage.getItem("localStudentsData");
                 if (localData) {
                     const students = JSON.parse(localData);
@@ -62,7 +85,6 @@ function InstrumentContent() {
                         if (data.angkets_1) setAngket1(data.angkets_1);
                         if (data.angkets_2) setAngket2(data.angkets_2);
                         if (data.essay_answer) {
-                            // Migration logic: if string, convert to {0: string}
                             if (typeof data.essay_answer === "string") {
                                 setEssayAnswers({ 0: data.essay_answer });
                             } else {
@@ -72,7 +94,7 @@ function InstrumentContent() {
                     }
                 }
             } catch (e) {
-                console.error(e);
+                console.error("Fetch error:", e);
             } finally {
                 setLoading(false);
             }
@@ -84,6 +106,7 @@ function InstrumentContent() {
     const autoSaveAngket = async (stage: 1 | 2, updatedData: Record<number, number>) => {
         setSaving(true);
         try {
+            // 1. Save to LocalStorage for safety
             const localData = localStorage.getItem("localStudentsData");
             if (localData) {
                 const students = JSON.parse(localData);
@@ -95,33 +118,60 @@ function InstrumentContent() {
                     localStorage.setItem("localStudentsData", JSON.stringify(students));
                 }
             }
+
+            // 2. Sync to Firestore
+            if (db) {
+                const docRef = doc(db, "students", studentId);
+                const updatePayload: any = {
+                    lastUpdated: new Date().toISOString()
+                };
+                if (stage === 1) updatePayload.angkets_1 = updatedData;
+                if (stage === 2) updatePayload.angkets_2 = updatedData;
+
+                await updateDoc(docRef, updatePayload).catch(async (err) => {
+                    // If doc doesn't exist, create it (should be created at login)
+                    if (err.code === "not-found") {
+                        await setDoc(docRef, updatePayload, { merge: true });
+                    }
+                });
+            }
         } catch (e) {
-            console.error(e);
+            console.error("AutoSave error:", e);
         } finally {
             setTimeout(() => setSaving(false), 500);
         }
     };
 
-    const autoSaveEssay = (val: Record<number, string>) => {
+    const autoSaveEssay = async (val: Record<number, string>) => {
         setSaving(true);
         setEssayAnswers(val);
         try {
+            // 1. Local
             const localData = localStorage.getItem("localStudentsData");
             if (localData) {
                 const students = JSON.parse(localData);
                 if (students[studentId]) {
                     students[studentId].essay_answer = val;
-
                     const start = localStorage.getItem(`start_${studentId}`);
-                    if (start) {
-                        students[studentId].completion_time_ms = Date.now() - parseInt(start);
-                    }
-
+                    if (start) { students[studentId].completion_time_ms = Date.now() - parseInt(start); }
                     localStorage.setItem("localStudentsData", JSON.stringify(students));
                 }
             }
+
+            // 2. Firebase
+            if (db) {
+                const docRef = doc(db, "students", studentId);
+                await updateDoc(docRef, {
+                    essay_answer: val,
+                    lastUpdated: new Date().toISOString()
+                }).catch(async (err) => {
+                    if (err.code === "not-found") {
+                        await setDoc(docRef, { essay_answer: val, lastUpdated: new Date().toISOString() }, { merge: true });
+                    }
+                });
+            }
         } catch (e) {
-            console.error(e);
+            console.error("AutoSave Essay error:", e);
         } finally {
             setTimeout(() => setSaving(false), 500);
         }
@@ -134,7 +184,10 @@ function InstrumentContent() {
     if (loading) {
         return (
             <div className="min-h-screen flex items-center justify-center bg-background">
-                <Loader2 className="w-12 h-12 animate-spin text-primary" />
+                <div className="text-center">
+                    <Loader2 className="w-12 h-12 animate-spin text-primary mx-auto mb-4" />
+                    <p className="text-slate-500 font-medium">Memuat data instrumen...</p>
+                </div>
             </div>
         );
     }

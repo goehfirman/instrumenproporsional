@@ -58,25 +58,18 @@ export default function AdminDashboard() {
     useEffect(() => {
         if (authChecking) return;
 
-        // Read from localStorage
-        const localData = localStorage.getItem("localStudentsData");
-        if (localData) {
-            const studentsMap = JSON.parse(localData);
-            setStudents(Object.values(studentsMap));
-        } else {
-            setStudents([]);
-        }
-        setLoading(false);
+        // 1. Real-time Firestore Sync
+        setLoading(true);
+        const unsub = onSnapshot(collection(db, "students"), (snapshot) => {
+            const studentsList = snapshot.docs.map(doc => ({
+                id: doc.id,
+                ...doc.data()
+            })) as Student[];
+            setStudents(studentsList);
+            setLoading(false);
+        });
 
-        // We can set a simple interval to poll localStorage for updates since it's temporary
-        const interval = setInterval(() => {
-            const liveData = localStorage.getItem("localStudentsData");
-            if (liveData) {
-                setStudents(Object.values(JSON.parse(liveData)));
-            }
-        }, 2000);
-
-        return () => clearInterval(interval);
+        return () => unsub();
     }, [authChecking]);
 
     useEffect(() => {
@@ -654,7 +647,7 @@ export default function AdminDashboard() {
 
             // Sync with Firestore (Persistent Data)
             try {
-                const studentRef = doc(db, "respondents", studentId);
+                const studentRef = doc(db, "students", studentId);
                 await updateDoc(studentRef, { essay_scores: newScores });
             } catch (fsErr) {
                 console.warn("Firestore sync failed:", fsErr);
@@ -778,7 +771,7 @@ export default function AdminDashboard() {
             }
 
             // Sync to Firestore
-            const studentRef = doc(db, "respondents", student.id);
+            const studentRef = doc(db, "students", student.id);
             await updateDoc(studentRef, { essay_scores: currentScores });
 
             // Sync to LocalStorage (Dashboard Source of Truth)
