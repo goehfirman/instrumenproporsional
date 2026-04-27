@@ -47,7 +47,11 @@ function InstrumentContent() {
             localStorage.setItem(`start_${sId}`, Date.now().toString());
         }
 
-        // 1. Real-time Cloud Sync
+        // 1. Sync Step from URL
+        const currentStep = stepParam ? parseInt(stepParam) : 1;
+        setStep(currentStep);
+
+        // 2. Real-time Cloud Sync
         let unsub = () => { };
         if (db) {
             unsub = onSnapshot(doc(db, "students", sId), (docSnap) => {
