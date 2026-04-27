@@ -2,7 +2,7 @@
 
 import { useSearchParams, useRouter } from "next/navigation";
 import { useEffect, useState, Suspense } from "react";
-import { doc, getDoc, updateDoc, setDoc } from "firebase/firestore";
+import { doc, getDoc, updateDoc, setDoc, onSnapshot } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { Loader2, Save, Home, BrainCircuit, CheckCircle } from "lucide-react";
 import { useRef } from "react";
@@ -47,61 +47,51 @@ function InstrumentContent() {
             localStorage.setItem(`start_${sId}`, Date.now().toString());
         }
 
-        // Fallback if step is not in URL
-        const stepNum = stepParam ? parseInt(stepParam) : 1;
-        setStep(stepNum);
-
-        // Fetch exiting data from Firestore first, then localStorage fallback
-        const fetchData = async () => {
-            try {
-                // Try Firebase first
-                if (db) {
-                    const docRef = doc(db, "students", sId);
-                    const docSnap = await getDoc(docRef);
-                    if (docSnap.exists()) {
-                        const data = docSnap.data();
-                        if (data.angkets_1) setAngket1(data.angkets_1);
-                        if (data.angkets_2) setAngket2(data.angkets_2);
-                        if (data.essay_answer) {
-                            if (typeof data.essay_answer === "string") {
-                                setEssayAnswers({ 0: data.essay_answer });
-                            } else {
-                                setEssayAnswers(data.essay_answer);
-                            }
-                        }
-                        // If we have cloud data, we can skip local storage, 
-                        // but let's sync them to be safe
-                        localStorage.setItem(`cloud_sync_${sId}`, "true");
-                        return;
-                    }
-                }
-
-                // Fallback to local
-                const localData = localStorage.getItem("localStudentsData");
-                if (localData) {
-                    const students = JSON.parse(localData);
-                    if (students[sId]) {
-                        const data = students[sId];
-                        if (data.angkets_1) setAngket1(data.angkets_1);
-                        if (data.angkets_2) setAngket2(data.angkets_2);
-                        if (data.essay_answer) {
-                            if (typeof data.essay_answer === "string") {
-                                setEssayAnswers({ 0: data.essay_answer });
-                            } else {
-                                setEssayAnswers(data.essay_answer);
-                            }
+        // 1. Real-time Cloud Sync
+        let unsub = () => { };
+        if (db) {
+            unsub = onSnapshot(doc(db, "students", sId), (docSnap) => {
+                if (docSnap.exists() && !saving) {
+                    const data = docSnap.data();
+                    if (data.angkets_1) setAngket1(data.angkets_1);
+                    if (data.angkets_2) setAngket2(data.angkets_2);
+                    if (data.essay_answer) {
+                        if (typeof data.essay_answer === "string") {
+                            setEssayAnswers({ 0: data.essay_answer });
+                        } else {
+                            setEssayAnswers(data.essay_answer);
                         }
                     }
                 }
-            } catch (e) {
-                console.error("Fetch error:", e);
-            } finally {
                 setLoading(false);
-            }
-        };
+            }, (error) => {
+                console.error("Instrument sync error:", error);
+                setLoading(false);
+            });
+        } else {
+            setLoading(false);
+        }
 
-        fetchData();
-    }, [stepParam, router]);
+        // 2. Initial Fallback to local
+        const localData = localStorage.getItem("localStudentsData");
+        if (localData && !db) {
+            const students = JSON.parse(localData);
+            if (students[sId]) {
+                const data = students[sId];
+                if (data.angkets_1) setAngket1(data.angkets_1);
+                if (data.angkets_2) setAngket2(data.angkets_2);
+                if (data.essay_answer) {
+                    if (typeof data.essay_answer === "string") {
+                        setEssayAnswers({ 0: data.essay_answer });
+                    } else {
+                        setEssayAnswers(data.essay_answer);
+                    }
+                }
+            }
+        }
+
+        return () => unsub();
+    }, [stepParam, router, saving]);
 
     const autoSaveAngket = async (stage: 1 | 2, updatedData: Record<number, number>) => {
         setSaving(true);

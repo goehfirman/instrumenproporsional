@@ -36,8 +36,11 @@ export default function StudentDashboard() {
             unsub = onSnapshot(doc(db, "students", sId), (docSnap) => {
                 if (docSnap.exists()) {
                     setStudentData(docSnap.data());
-                    setLoading(false);
                 }
+                setLoading(false);
+            }, (error) => {
+                console.error("Dashboard sync error:", error);
+                setLoading(false);
             });
         }
 
