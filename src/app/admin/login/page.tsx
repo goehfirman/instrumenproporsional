@@ -79,6 +79,16 @@ export default function AdminLogin() {
                         )}
                     </button>
                 </form>
+
+                <div className="mt-8 pt-6 border-t border-slate-100 flex justify-center">
+                    <button
+                        onClick={() => router.push("/")}
+                        className="text-slate-400 hover:text-primary font-bold text-sm transition-colors flex items-center gap-2"
+                    >
+                        <div className="w-1.5 h-1.5 bg-slate-200 rounded-full"></div>
+                        Kembali ke Beranda
+                    </button>
+                </div>
             </div>
         </div>
     );

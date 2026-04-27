@@ -31,6 +31,7 @@ function InstrumentContent() {
     useEffect(() => {
         // Reset subStep when step changes
         setSubStep(0);
+        window.scrollTo({ top: 0, behavior: 'smooth' });
     }, [stepParam]);
 
     useEffect(() => {
@@ -89,6 +90,8 @@ function InstrumentContent() {
                 if (students[studentId]) {
                     if (stage === 1) students[studentId].angkets_1 = updatedData;
                     if (stage === 2) students[studentId].angkets_2 = updatedData;
+                    const start = localStorage.getItem(`start_${studentId}`);
+                    if (start) { students[studentId].completion_time_ms = Date.now() - parseInt(start); }
                     localStorage.setItem("localStudentsData", JSON.stringify(students));
                 }
             }
@@ -156,11 +159,17 @@ function InstrumentContent() {
         const currentGroupAnswered = currentGroup.qs.every((_, i) => answers[startIndex + i] !== undefined);
 
         const handleSubNext = () => {
-            if (!isLastSubStep && currentGroupAnswered) setSubStep(subStep + 1);
+            if (!isLastSubStep && currentGroupAnswered) {
+                setSubStep(subStep + 1);
+                setTimeout(() => { document.getElementById('questions-start')?.scrollIntoView({ behavior: 'smooth', block: 'start' }); }, 100);
+            }
         };
 
         const handleSubPrev = () => {
-            if (!isFirstSubStep) setSubStep(subStep - 1);
+            if (!isFirstSubStep) {
+                setSubStep(subStep - 1);
+                setTimeout(() => { document.getElementById('questions-start')?.scrollIntoView({ behavior: 'smooth', block: 'start' }); }, 100);
+            }
         };
 
         return (
@@ -210,7 +219,7 @@ function InstrumentContent() {
                         </p>
                     </div>
 
-                    <div className="space-y-8">
+                    <div id="questions-start" className="space-y-8">
                         {getStudentShuffle(studentId, stage, subStep, currentGroup.qs.length).map((originalLocalIndex, displayIndex) => {
                             const globalIndex = startIndex + originalLocalIndex;
                             const q = currentGroup.qs[originalLocalIndex];
@@ -353,12 +362,18 @@ function InstrumentContent() {
         const isLast = essayStep === ESSAY_QUESTIONS.length - 1;
 
         const handleEssayNext = () => {
-            if (!isLast) setEssayStep(essayStep + 1);
+            if (!isLast) {
+                setEssayStep(essayStep + 1);
+                setTimeout(() => { document.getElementById('essay-scroll-point')?.scrollIntoView({ behavior: 'smooth', block: 'start' }); }, 100);
+            }
             else handleNext();
         };
 
         const handleEssayPrev = () => {
-            if (!isFirst) setEssayStep(essayStep - 1);
+            if (!isFirst) {
+                setEssayStep(essayStep - 1);
+                setTimeout(() => { document.getElementById('essay-scroll-point')?.scrollIntoView({ behavior: 'smooth', block: 'start' }); }, 100);
+            }
         };
 
         return (
@@ -375,7 +390,10 @@ function InstrumentContent() {
                             return (
                                 <button
                                     key={i}
-                                    onClick={() => setEssayStep(i)}
+                                    onClick={() => {
+                                        setEssayStep(i);
+                                        setTimeout(() => { document.getElementById('essay-scroll-point')?.scrollIntoView({ behavior: 'smooth', block: 'start' }); }, 100);
+                                    }}
                                     className={`w-10 h-10 rounded-xl font-black transition-all flex items-center justify-center text-sm
                                         ${isCurrent ? 'bg-primary text-white scale-110 shadow-lg shadow-primary/30 ring-4 ring-primary/10' :
                                             isAnswered ? 'bg-emerald-500 text-white shadow-md shadow-emerald-500/20 hover:bg-emerald-600' :
@@ -399,7 +417,7 @@ function InstrumentContent() {
                     </div>
                 </div>
 
-                <div className="bg-white p-6 md:p-8 rounded-3xl shadow-sm border border-slate-100 mb-8">
+                <div id="essay-scroll-point" className="bg-white p-6 md:p-8 rounded-3xl shadow-sm border border-slate-100 mb-8">
                     <div className="text-center mb-10 border-b-2 border-primary/20 pb-6">
                         <h1 className="text-2xl font-bold text-primary">Tes Penalaran Proporsional</h1>
                     </div>
