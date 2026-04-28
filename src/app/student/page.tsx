@@ -159,6 +159,9 @@ export default function StudentDashboard() {
                                 <h1 className="text-2xl font-black text-primary tracking-tighter uppercase mb-1">
                                     Selamat Datang, {studentName}
                                 </h1>
+                                <p className="text-[10px] md:text-xs text-slate-400 font-medium leading-relaxed mb-2 italic">
+                                    (Pengaruh Lingkungan Belajar dan Efikasi Diri terhadap Kemampuan Penalaran Proporsional Matematika)
+                                </p>
                                 <div className="flex items-center gap-2">
                                     <p className="text-slate-500 font-medium">Portal Instrumen Penelitian</p>
                                     <div className="flex items-center gap-1.5 px-2 py-0.5 bg-slate-50 rounded-full border border-slate-100 shadow-sm">
