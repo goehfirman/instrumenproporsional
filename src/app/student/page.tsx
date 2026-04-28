@@ -159,33 +159,33 @@ export default function StudentDashboard() {
                                 <h1 className="text-2xl font-black text-primary tracking-tighter uppercase mb-1">
                                     Selamat Datang, {studentName}
                                 </h1>
-                                <p className="text-[10px] md:text-xs text-slate-400 font-medium leading-relaxed mb-2 italic">
+                                <p className="text-slate-500 font-medium">Portal Instrumen Penelitian</p>
+                                <p className="text-[10px] md:text-xs text-slate-400 font-medium leading-relaxed mt-1 italic">
                                     (Pengaruh Lingkungan Belajar dan Efikasi Diri terhadap Kemampuan Penalaran Proporsional Matematika)
                                 </p>
-                                <div className="flex items-center gap-2">
-                                    <p className="text-slate-500 font-medium">Portal Instrumen Penelitian</p>
-                                    <div className="flex items-center gap-1.5 px-2 py-0.5 bg-slate-50 rounded-full border border-slate-100 shadow-sm">
-                                        {db ? (
-                                            <>
-                                                <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></div>
-                                                <span className="text-[10px] font-bold text-emerald-600 uppercase tracking-tight">Cloud Synced</span>
-                                            </>
-                                        ) : (
-                                            <>
-                                                <div className="w-1.5 h-1.5 rounded-full bg-amber-500"></div>
-                                                <span className="text-[10px] font-bold text-amber-600 uppercase tracking-tight">Local Cache</span>
-                                            </>
-                                        )}
-                                    </div>
-                                </div>
                             </div>
-                            <button
-                                onClick={handleLogout}
-                                className="bg-slate-100 hover:bg-slate-200 p-3 rounded-2xl transition-all border border-slate-200 hover:scale-105 active:scale-95 group"
-                                title="Keluar"
-                            >
-                                <LogOut className="w-6 h-6 text-slate-600 group-hover:rotate-12 transition-transform" />
-                            </button>
+                            <div className="flex items-center gap-3">
+                                <div className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 bg-slate-50 rounded-2xl border border-slate-100 shadow-sm h-fit">
+                                    {db ? (
+                                        <>
+                                            <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></div>
+                                            <span className="text-[10px] font-bold text-emerald-600 uppercase tracking-tight">Cloud Synced</span>
+                                        </>
+                                    ) : (
+                                        <>
+                                            <div className="w-1.5 h-1.5 rounded-full bg-amber-500"></div>
+                                            <span className="text-[10px] font-bold text-amber-600 uppercase tracking-tight">Local Cache</span>
+                                        </>
+                                    )}
+                                </div>
+                                <button
+                                    onClick={handleLogout}
+                                    className="bg-slate-100 hover:bg-slate-200 p-3 rounded-2xl transition-all border border-slate-200 hover:scale-105 active:scale-95 group"
+                                    title="Keluar"
+                                >
+                                    <LogOut className="w-6 h-6 text-slate-600 group-hover:rotate-12 transition-transform" />
+                                </button>
+                            </div>
                         </div>
                     </div>
                     {/* Decorative elements */}
