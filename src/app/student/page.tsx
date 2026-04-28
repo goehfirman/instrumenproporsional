@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { ClipboardList, BookOpen, BrainCircuit, CheckCircle, ArrowRight, LogOut } from "lucide-react";
 import { ESSAY_QUESTIONS } from "@/lib/constants";
 import { db } from "@/lib/firebase";
-import { doc, getDoc, onSnapshot } from "firebase/firestore";
+import { doc, getDoc, onSnapshot, updateDoc } from "firebase/firestore";
 
 interface StudentData {
     angkets_1?: Record<number, number>;
@@ -60,6 +60,37 @@ export default function StudentDashboard() {
 
         return () => unsub();
     }, [router]);
+
+    // Automatic status sync
+    useEffect(() => {
+        const sId = sessionStorage.getItem("studentId");
+        if (!sId || !db) return;
+
+        const angket1Ans = studentData.angkets_1 ? Object.keys(studentData.angkets_1).length : 0;
+        const angket2Ans = studentData.angkets_2 ? Object.keys(studentData.angkets_2).length : 0;
+
+        const checkAnswered = (i: number, val: string) => {
+            const trimmed = (val || "").trim();
+            if (!trimmed) return false;
+            if (i === 6) {
+                const clean = trimmed.replace(/\[VISUAL:.*?\]|\[TABLE\]|\[LINE-T\]|\[LINE-B\]|\[REASON\]|[:| \t\n\r]/g, "");
+                return clean.length > 0;
+            }
+            return trimmed.length > 0;
+        };
+
+        const isEssayDone = (() => {
+            const ans = studentData.essay_answer;
+            if (!ans) return false;
+            if (typeof ans === "string") return checkAnswered(0, ans);
+            return ESSAY_QUESTIONS.every((_, i) => checkAnswered(i, ans[i] || ""));
+        })();
+
+        if (angket1Ans === 43 && angket2Ans === 41 && isEssayDone && (studentData as any).status_progres !== 4) {
+            const docRef = doc(db, "students", sId);
+            updateDoc(docRef, { status_progres: 4 }).catch(console.error);
+        }
+    }, [studentData]);
 
     const handleLogout = () => {
         sessionStorage.removeItem("studentId");

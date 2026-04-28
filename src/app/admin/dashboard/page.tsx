@@ -12,6 +12,7 @@ import { LINGKUNGAN_BELAJAR_Q, EFIKASI_DIRI_Q, TES_SOAL, ESSAY_QUESTIONS } from 
 interface Student {
     id: string;
     name: string;
+    school?: string;
     status_progres: number;
     angkets_1?: Record<number, number>;
     angkets_2?: Record<number, number>;
@@ -294,14 +295,45 @@ export default function AdminDashboard() {
         alert("Konfigurasi API diperbarui paksa dan siap digunakan!");
     };
 
-    const totalSiswa = students.length;
-    const sedangMengerjakan = students.filter(s => s.status_progres > 0 && s.status_progres < 4).length;
-    const selesai = students.filter(s => s.status_progres === 4).length;
-
     const calculateScore = (angkets?: Record<number, number>) => {
         if (!angkets) return 0;
         return Object.values(angkets).reduce((acc, curr) => acc + curr, 0);
     };
+
+    const isStudentFinished = (s: Student) => {
+        if (s.status_progres === 4) return true;
+
+        const angket1Done = s.angkets_1 && Object.keys(s.angkets_1).length >= 43;
+        const angket2Done = s.angkets_2 && Object.keys(s.angkets_2).length >= 41;
+
+        // Check essay
+        const essayAns = s.essay_answer || {};
+        const checkAnswered = (i: number, val: string) => {
+            const trimmed = (val || "").trim();
+            if (!trimmed) return false;
+            // Question 7 has special visual markers
+            if (i === 6) {
+                const clean = trimmed.replace(/\[VISUAL:.*?\]|\[TABLE\]|\[LINE-T\]|\[LINE-B\]|\[REASON\]|[:| \t\n\r]/g, "");
+                return clean.length > 0;
+            }
+            return trimmed.length > 0;
+        };
+        const essayDone = ESSAY_QUESTIONS.every((_, i) => checkAnswered(i, essayAns[i] || ""));
+
+        return angket1Done && angket2Done && essayDone;
+    };
+
+    const totalSiswa = students.length;
+    const selesai = students.filter(s => isStudentFinished(s)).length;
+    const sedangMengerjakan = students.filter(s => {
+        const finished = isStudentFinished(s);
+        if (finished) return false;
+        // In progress if has some data
+        return (s.angkets_1 && Object.keys(s.angkets_1).length > 0) ||
+            (s.angkets_2 && Object.keys(s.angkets_2).length > 0) ||
+            (s.essay_answer && Object.keys(s.essay_answer).length > 0);
+    }).length;
+
 
     const handleLogout = async () => {
         if (confirm("Apakah Anda yakin ingin keluar dari Portal Peneliti?")) {
@@ -520,6 +552,7 @@ export default function AdminDashboard() {
         // 1. Rekapitulasi Global (Simplified)
         const recapHeaders = [
             "Nama Lengkap",
+            "Nama Sekolah",
             "Status",
             "Skor Lingkungan",
             "Skor Efikasi",
@@ -529,6 +562,7 @@ export default function AdminDashboard() {
         ];
         const recapRows = students.map(s => [
             s.name,
+            s.school || "-",
             s.status_progres === 4 ? "Selesai" : `Tahap ${s.status_progres}`,
             calculateScore(s.angkets_1),
             calculateScore(s.angkets_2),
@@ -539,17 +573,19 @@ export default function AdminDashboard() {
         const wsRecap = XLSX.utils.aoa_to_sheet([recapHeaders, ...recapRows]);
 
         // 2. Angket Lingkungan Belajar (Item breakdown)
-        const envHeaders = ["Nama Lengkap", ...Array.from({ length: 43 }).map((_, i) => `Butir ${i + 1}`)];
+        const envHeaders = ["Nama Lengkap", "Nama Sekolah", ...Array.from({ length: 43 }).map((_, i) => `Butir ${i + 1}`)];
         const envRows = students.map(s => [
             s.name,
+            s.school || "-",
             ...Array.from({ length: 43 }).map((_, i) => s.angkets_1?.[i] ?? "")
         ]);
         const wsEnv = XLSX.utils.aoa_to_sheet([envHeaders, ...envRows]);
 
         // 3. Angket Efikasi Diri (Item breakdown)
-        const efiHeaders = ["Nama Lengkap", ...Array.from({ length: 41 }).map((_, i) => `Butir ${i + 1}`)];
+        const efiHeaders = ["Nama Lengkap", "Nama Sekolah", ...Array.from({ length: 41 }).map((_, i) => `Butir ${i + 1}`)];
         const efiRows = students.map(s => [
             s.name,
+            s.school || "-",
             ...Array.from({ length: 41 }).map((_, i) => s.angkets_2?.[i] ?? "")
         ]);
         const wsEfi = XLSX.utils.aoa_to_sheet([efiHeaders, ...efiRows]);
@@ -557,6 +593,7 @@ export default function AdminDashboard() {
         // 4. Jawaban Tes Esai (Separate Sheet)
         const essayHeaders = [
             "Nama Lengkap",
+            "Nama Sekolah",
             ...ESSAY_QUESTIONS.flatMap(q => [`Jawaban ${q.id}`, `Skor ${q.id}`])
         ];
         const essayRows = students.map(s => {
@@ -564,6 +601,7 @@ export default function AdminDashboard() {
             const essayScores = s.essay_scores || {};
             return [
                 s.name,
+                s.school || "-",
                 ...ESSAY_QUESTIONS.flatMap((_, i) => [
                     essayAns[i] || "",
                     essayScores[i] || 0
@@ -698,6 +736,7 @@ export default function AdminDashboard() {
                 <th className="p-4 font-semibold text-left">
                     <SortButton label="Nama" sortKey="name" />
                 </th>
+                <th className="p-4 font-semibold text-left">Sekolah</th>
                 <th className="p-4 font-semibold text-center">
                     <SortButton label="Waktu" sortKey="lastUpdated" />
                 </th>
@@ -1272,6 +1311,7 @@ export default function AdminDashboard() {
                                         return (
                                             <tr key={s.id} className="hover:bg-slate-50/50 transition-colors">
                                                 <td className="p-4 font-medium text-slate-800">{s.name}</td>
+                                                <td className="p-4 text-slate-600 font-medium">{s.school || "-"}</td>
                                                 <td className="p-4 text-center text-[10px] text-slate-500 font-mono">
                                                     {s.lastUpdated ? new Date(s.lastUpdated).toLocaleString('id-ID', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' }) : "-"}
                                                 </td>
@@ -1368,8 +1408,9 @@ export default function AdminDashboard() {
                                                 </td>
                                                 <td className="p-4 text-center">
                                                     {(() => {
-                                                        const allComplete = envComplete && efiComplete && s.essay_scores;
-                                                        if (!allComplete) return <span className="text-[10px] text-slate-400 italic">Belum selesai</span>;
+                                                        const isFinished = isStudentFinished(s);
+                                                        if (!isFinished) return <span className="text-[10px] text-slate-400 italic">Belum selesai</span>;
+                                                        if (!s.essay_scores) return <span className="text-[10px] text-amber-500 font-bold italic">Belum dinilai</span>;
 
                                                         const allStats = [...Object.values(validation.statsEnv), ...Object.values(validation.statsEfi)];
                                                         const allIssues = [...validation.issuesEnv, ...validation.issuesEfi];

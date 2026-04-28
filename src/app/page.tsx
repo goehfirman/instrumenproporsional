@@ -8,13 +8,15 @@ import { Loader2 } from "lucide-react";
 
 export default function StudentLogin() {
   const [name, setName] = useState("");
+  const [school, setSchool] = useState("");
   const [loading, setLoading] = useState(false);
   const router = useRouter();
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     const cleanName = name.trim().toUpperCase();
-    if (!cleanName) return;
+    const cleanSchool = school.trim().toUpperCase();
+    if (!cleanName || !cleanSchool) return;
 
     setLoading(true);
     try {
@@ -47,6 +49,7 @@ export default function StudentLogin() {
           existingData = {
             id: studentId,
             name: cleanName,
+            school: cleanSchool,
             createdAt: new Date().toISOString(),
             status_progres: 0
           };
@@ -61,6 +64,7 @@ export default function StudentLogin() {
       // 3. Save to Session/LocalStorage
       sessionStorage.setItem("studentId", studentId);
       sessionStorage.setItem("studentName", cleanName);
+      sessionStorage.setItem("studentSchool", existingData.school || cleanSchool);
       localStorage.setItem(`start_${studentId}`, Date.now().toString());
 
       const localData = localStorage.getItem("localStudentsData");
@@ -102,7 +106,7 @@ export default function StudentLogin() {
         <form onSubmit={handleLogin} className="p-8 pb-6">
           <div className="mb-6">
             <label htmlFor="name" className="block text-sm font-semibold text-foreground mb-2">
-              Masukkan Nama Lengkap Sesuai Absen
+              Masukan Nama Lengkap
             </label>
             <input
               id="name"
@@ -116,9 +120,25 @@ export default function StudentLogin() {
             />
           </div>
 
+          <div className="mb-6">
+            <label htmlFor="school" className="block text-sm font-semibold text-foreground mb-2">
+              Nama Sekolah
+            </label>
+            <input
+              id="school"
+              type="text"
+              value={school}
+              onChange={(e) => setSchool(e.target.value)}
+              placeholder="Contoh: SMP Negeri 1 Jakarta"
+              className="w-full text-lg px-4 py-4 rounded-xl border-2 border-slate-200 focus:border-primary focus:ring-4 focus:ring-primary/20 transition-all outline-none"
+              required
+              disabled={loading}
+            />
+          </div>
+
           <button
             type="submit"
-            disabled={loading || !name.trim()}
+            disabled={loading || !name.trim() || !school.trim()}
             className="w-full bg-primary hover:bg-primary-hover text-white font-bold text-lg py-4 rounded-xl transition-all shadow-lg hover:shadow-primary/50 disabled:opacity-50 disabled:pointer-events-none flex items-center justify-center gap-2"
           >
             {loading ? (
