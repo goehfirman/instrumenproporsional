@@ -25,7 +25,11 @@ export default function StudentLogin() {
 
       // 1. Try to find existing student in Firestore
       if (db) {
-        const q = query(collection(db, "students"), where("name", "==", cleanName));
+        const q = query(
+          collection(db, "students"),
+          where("name", "==", cleanName),
+          where("school", "==", cleanSchool)
+        );
         const querySnapshot = await getDocs(q);
 
         if (!querySnapshot.empty) {
@@ -39,7 +43,9 @@ export default function StudentLogin() {
       if (!studentId) {
         const localData = localStorage.getItem("localStudentsData");
         const students = localData ? JSON.parse(localData) : {};
-        const localStudent = Object.values(students).find((s: any) => s.name === cleanName);
+        const localStudent = Object.values(students).find((s: any) =>
+          s.name === cleanName && s.school === cleanSchool
+        );
 
         if (localStudent) {
           studentId = (localStudent as any).id;
@@ -98,7 +104,7 @@ export default function StudentLogin() {
           </h2>
           <div className="bg-white/10 rounded-2xl p-4 text-[10px] md:text-xs text-white/90 border border-white/5 leading-relaxed backdrop-blur-sm mx-4">
             <p>
-              Semua data akan tersimpan otomatis. Jika ingin masuk lagi dengan memulihkan progres pengerjaan, cukup masukkan nama lengkap sesuai pengisian awal.
+              Semua data akan tersimpan otomatis. Jika ingin masuk lagi dengan memulihkan progres pengerjaan, cukup masukkan nama lengkap dan nama sekolah sesuai pengisian awal.
             </p>
           </div>
         </div>
