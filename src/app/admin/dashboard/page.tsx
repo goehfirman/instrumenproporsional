@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useEffect, useState } from "react";
 import { collection, getDocs, doc, updateDoc, onSnapshot, deleteDoc } from "firebase/firestore";
@@ -7,7 +7,7 @@ import { db, auth } from "@/lib/firebase";
 import { useRouter } from "next/navigation";
 import { Users, BookOpen, CheckCircle, Download, LogOut, Edit, Eye, Trash2, Search, Filter, AlertTriangle, Sparkles, Zap, Wand2, Settings, Flag, Home, BrainCircuit, ArrowUpDown, ArrowUp, ArrowDown } from "lucide-react";
 import * as XLSX from "xlsx";
-import { LINGKUNGAN_BELAJAR_Q, EFIKASI_DIRI_Q, TES_SOAL, ESSAY_QUESTIONS } from "@/lib/constants";
+import { LINGKUNGAN_BELAJAR_Q, EFIKASI_DIRI_Q, TES_SOAL, ESSAY_QUESTIONS, ENV_NEGATIVE, EFI_NEGATIVE } from "@/lib/constants";
 
 interface Student {
     id: string;
@@ -295,9 +295,14 @@ export default function AdminDashboard() {
         alert("Konfigurasi API diperbarui paksa dan siap digunakan!");
     };
 
-    const calculateScore = (angkets?: Record<number, number>) => {
+    const calculateScore = (angkets?: Record<number, number>, negativeIndices: number[] = []) => {
         if (!angkets) return 0;
-        return Object.values(angkets).reduce((acc, curr) => acc + curr, 0);
+        return Object.entries(angkets).reduce((acc, [idx, val]) => {
+            const index = Number(idx);
+            // Reverse scoring logic for negative items: point = 6 - original_value
+            const score = negativeIndices.includes(index) ? (6 - val) : val;
+            return acc + score;
+        }, 0);
     };
 
     const isStudentFinished = (s: Student) => {
@@ -349,8 +354,8 @@ export default function AdminDashboard() {
         let issuesEnv: string[] = [];
         let issuesEfi: string[] = [];
 
-        const envScore = calculateScore(s.angkets_1);
-        const efiScore = calculateScore(s.angkets_2);
+        const envScore = calculateScore(s.angkets_1, ENV_NEGATIVE);
+        const efiScore = calculateScore(s.angkets_2, EFI_NEGATIVE);
         const essayScores = s.essay_scores || {};
         const essayScoreSum = Object.values(essayScores).reduce((a, b) => a + Number(b), 0);
         const essayFullText = typeof s.essay_answer === "string" ? s.essay_answer : Object.values(s.essay_answer || {}).map(v => String(v)).join(" ");
@@ -548,6 +553,12 @@ export default function AdminDashboard() {
         XLSX.writeFile(wb, "Blueprint_Pernyataan_Instrumen.xlsx");
     };
 
+    // Helper for transformed score
+    const getPoint = (val: number | undefined, index: number, negativeIndices: number[]) => {
+        if (val === undefined) return undefined;
+        return negativeIndices.includes(index) ? (6 - val) : val;
+    };
+
     const exportExcel = () => {
         // 1. Rekapitulasi Global (Simplified)
         const recapHeaders = [
@@ -564,29 +575,29 @@ export default function AdminDashboard() {
             s.name,
             s.school || "-",
             s.status_progres === 4 ? "Selesai" : `Tahap ${s.status_progres}`,
-            calculateScore(s.angkets_1),
-            calculateScore(s.angkets_2),
+            calculateScore(s.angkets_1, ENV_NEGATIVE),
+            calculateScore(s.angkets_2, EFI_NEGATIVE),
             Object.values(s.essay_scores || {}).reduce((a, b) => Number(a) + Number(b), 0),
             getScale100(s.essay_scores),
             [...analyzeRespondent(s).issuesEnv, ...analyzeRespondent(s).issuesEfi].join(" | ") || "Valid"
         ]);
         const wsRecap = XLSX.utils.aoa_to_sheet([recapHeaders, ...recapRows]);
 
-        // 2. Angket Lingkungan Belajar (Item breakdown)
-        const envHeaders = ["Nama Lengkap", "Nama Sekolah", ...Array.from({ length: 43 }).map((_, i) => `Butir ${i + 1}`)];
+        // 2. Angket Lingkungan Belajar (Item breakdown - Transformed Points)
+        const envHeaders = ["Nama Lengkap", "Nama Sekolah", ...Array.from({ length: 43 }).map((_, i) => `Butir ${i + 1}${ENV_NEGATIVE.includes(i) ? " (-)" : " (+)"}`)];
         const envRows = students.map(s => [
             s.name,
             s.school || "-",
-            ...Array.from({ length: 43 }).map((_, i) => s.angkets_1?.[i] ?? "")
+            ...Array.from({ length: 43 }).map((_, i) => getPoint(s.angkets_1?.[i], i, ENV_NEGATIVE) ?? "")
         ]);
         const wsEnv = XLSX.utils.aoa_to_sheet([envHeaders, ...envRows]);
 
-        // 3. Angket Efikasi Diri (Item breakdown)
-        const efiHeaders = ["Nama Lengkap", "Nama Sekolah", ...Array.from({ length: 41 }).map((_, i) => `Butir ${i + 1}`)];
+        // 3. Angket Efikasi Diri (Item breakdown - Transformed Points)
+        const efiHeaders = ["Nama Lengkap", "Nama Sekolah", ...Array.from({ length: 41 }).map((_, i) => `Butir ${i + 1}${EFI_NEGATIVE.includes(i) ? " (-)" : " (+)"}`)];
         const efiRows = students.map(s => [
             s.name,
             s.school || "-",
-            ...Array.from({ length: 41 }).map((_, i) => s.angkets_2?.[i] ?? "")
+            ...Array.from({ length: 41 }).map((_, i) => getPoint(s.angkets_2?.[i], i, EFI_NEGATIVE) ?? "")
         ]);
         const wsEfi = XLSX.utils.aoa_to_sheet([efiHeaders, ...efiRows]);
 
@@ -622,31 +633,42 @@ export default function AdminDashboard() {
 
     const renderAngketList = (title: string, score: number, maxScore: number, angkets: Record<number, number> | undefined, questionsArray: { qs: string[] }[], isEfikasi = false) => {
         const flatQuestions = questionsArray.flatMap(d => d.qs);
+        const negIndices = isEfikasi ? EFI_NEGATIVE : ENV_NEGATIVE;
         return (
             <div className="mb-6 bg-slate-50 p-4 rounded-xl border border-slate-100">
                 <div className="flex justify-between items-center mb-4">
                     <h4 className="font-bold text-slate-800">{title}</h4>
-                    <span className={`px-2 py-1 rounded text-xs font-bold ${isEfikasi ? 'bg-amber-100 text-amber-700' : 'bg-primary/10 text-primary'}`}>
-                        Skor: {score} / {maxScore}
-                    </span>
+                    <div className="text-right">
+                        <span className={`px-2 py-1 rounded text-xs font-bold ${isEfikasi ? 'bg-amber-100 text-amber-700' : 'bg-primary/10 text-primary'}`}>
+                            Poin Hasil: {score} / {maxScore}
+                        </span>
+                        <p className="text-[9px] text-slate-400 mt-1">*Skor sudah dibalik untuk butir negatif (-)</p>
+                    </div>
                 </div>
                 <div className="space-y-2 max-h-[300px] overflow-y-auto pr-2 custom-scrollbar">
                     {flatQuestions.map((q, i) => {
-                        const ans = angkets?.[i];
+                        const rawAns = angkets?.[i];
+                        const point = getPoint(rawAns, i, negIndices);
+                        const isNeg = negIndices.includes(i);
+
                         let bgClass = "bg-slate-200 text-slate-500";
-                        if (ans) {
+                        if (point) {
                             if (isEfikasi) {
-                                bgClass = ans >= 4 ? "bg-amber-500 text-white" : ans === 3 ? "bg-amber-300 text-amber-900" : "bg-amber-100 text-amber-700";
+                                bgClass = point >= 4 ? "bg-amber-500 text-white" : point === 3 ? "bg-amber-300 text-amber-900" : "bg-amber-100 text-amber-700";
                             } else {
-                                bgClass = ans >= 4 ? "bg-primary text-white" : ans === 3 ? "bg-primary/40 text-primary-900" : "bg-primary/10 text-primary";
+                                bgClass = point >= 4 ? "bg-primary text-white" : point === 3 ? "bg-primary/40 text-primary-900" : "bg-primary/10 text-primary";
                             }
                         }
                         return (
                             <div key={i} className="flex gap-3 text-sm p-2 bg-white rounded-lg border border-slate-100 items-start">
-                                <div className={`w-8 h-8 flex-shrink-0 flex items-center justify-center rounded-md font-bold ${bgClass}`}>
-                                    {ans || "-"}
+                                <div className={`w-8 h-8 flex-shrink-0 flex items-center justify-center rounded-md font-bold transition-all ${bgClass}`} title={isNeg ? `Nilai Asli: ${rawAns} (Dibalik karena butir negatif)` : `Nilai: ${rawAns}`}>
+                                    {point || "-"}
                                 </div>
-                                <div className="text-slate-600 leading-tight leading-snug">{q}</div>
+                                <div className="text-slate-600 leading-tight flex-1">
+                                    <span className="font-bold text-[10px] mr-1 text-slate-400">{i + 1}.</span>
+                                    {q}
+                                    {isNeg && <span className="ml-1 text-[10px] font-black text-rose-500">(-)</span>}
+                                </div>
                             </div>
                         );
                     })}
@@ -1226,22 +1248,26 @@ export default function AdminDashboard() {
                                             const isEnv = activeView === "Lingkungan";
                                             const len = isEnv ? 43 : 41;
                                             const angkets = isEnv ? s.angkets_1 : s.angkets_2;
+                                            const negIndices = isEnv ? ENV_NEGATIVE : EFI_NEGATIVE;
                                             const qsList = isEnv ? LINGKUNGAN_BELAJAR_Q.flatMap(d => d.qs) : EFIKASI_DIRI_Q.flatMap(d => d.qs);
                                             return (
                                                 <tr key={s.id} className="hover:bg-slate-50 transition-colors">
                                                     <td className="p-4 font-medium text-slate-800 sticky left-0 bg-white z-10 shadow-[1px_0_0_0_#f1f5f9] whitespace-nowrap">{s.name}</td>
-                                                    <td className="p-4 text-center font-bold text-slate-600 border-r border-slate-100 bg-white">{calculateScore(angkets) || "-"}</td>
-                                                    {Array.from({ length: len }).map((_, i) => (
-                                                        <td key={i} className="p-1">
-                                                            <div
-                                                                onClick={(e) => { e.stopPropagation(); setPopover({ text: qsList[i], x: e.clientX, y: e.clientY, idx: i }); }}
-                                                                className={`w-8 h-8 mx-auto flex items-center justify-center rounded text-[11px] cursor-pointer ring-offset-1 hover:ring-2 hover:ring-slate-300 transition-all ${popover?.idx === i ? 'ring-2 ring-primary scale-125 z-10' : ''} ${getCellColor(angkets?.[i])}`}
-                                                                title="Klik untuk melihat teks pernyataan"
-                                                            >
-                                                                {angkets?.[i] || "-"}
-                                                            </div>
-                                                        </td>
-                                                    ))}
+                                                    <td className="p-4 text-center font-bold text-slate-600 border-r border-slate-100 bg-white">{calculateScore(angkets, negIndices) || "-"}</td>
+                                                    {Array.from({ length: len }).map((_, i) => {
+                                                        const point = getPoint(angkets?.[i], i, negIndices);
+                                                        return (
+                                                            <td key={i} className="p-1">
+                                                                <div
+                                                                    onClick={(e) => { e.stopPropagation(); setPopover({ text: qsList[i], x: e.clientX, y: e.clientY, idx: i }); }}
+                                                                    className={`w-8 h-8 mx-auto flex items-center justify-center rounded text-[11px] cursor-pointer ring-offset-1 hover:ring-2 hover:ring-slate-300 transition-all ${popover?.idx === i ? 'ring-2 ring-primary scale-125 z-10' : ''} ${getCellColor(point)}`}
+                                                                    title={`Butir ${i + 1}: ${negIndices.includes(i) ? '(-) ' : '(+) '}${qsList[i]}`}
+                                                                >
+                                                                    {point || "-"}
+                                                                </div>
+                                                            </td>
+                                                        );
+                                                    })}
                                                 </tr>
                                             );
                                         }
@@ -1373,26 +1399,26 @@ export default function AdminDashboard() {
                                                 </td>
                                                 <td className="p-4 text-center">
                                                     <div className="flex flex-col items-center gap-1">
-                                                        <span className="font-semibold text-slate-600">{calculateScore(s.angkets_1) || "-"}</span>
-                                                        {s.angkets_1 && calculateScore(s.angkets_1) > 0 && (
+                                                        <span className="font-semibold text-slate-600">{calculateScore(s.angkets_1, ENV_NEGATIVE) || "-"}</span>
+                                                        {s.angkets_1 && calculateScore(s.angkets_1, ENV_NEGATIVE) > 0 && (
                                                             <button
-                                                                onClick={(e) => { e.stopPropagation(); const val = getScaleValidity(calculateScore(s.angkets_1), 215); if (val) setPopover({ text: val.desc, x: e.clientX, y: e.clientY, idx: `v1-${s.id}` }); }}
-                                                                className={`text-[9px] px-2 py-0.5 rounded-full border font-bold hover:scale-105 transition-transform ${getScaleValidity(calculateScore(s.angkets_1), 215)?.color}`}
+                                                                onClick={(e) => { e.stopPropagation(); const val = getScaleValidity(calculateScore(s.angkets_1, ENV_NEGATIVE), 215); if (val) setPopover({ text: val.desc, x: e.clientX, y: e.clientY, idx: `v1-${s.id}` }); }}
+                                                                className={`text-[9px] px-2 py-0.5 rounded-full border font-bold hover:scale-105 transition-transform ${getScaleValidity(calculateScore(s.angkets_1, ENV_NEGATIVE), 215)?.color}`}
                                                             >
-                                                                {getScaleValidity(calculateScore(s.angkets_1), 215)?.label}
+                                                                {getScaleValidity(calculateScore(s.angkets_1, ENV_NEGATIVE), 215)?.label}
                                                             </button>
                                                         )}
                                                     </div>
                                                 </td>
                                                 <td className="p-4 text-center">
                                                     <div className="flex flex-col items-center gap-1">
-                                                        <span className="font-semibold text-slate-600">{calculateScore(s.angkets_2) || "-"}</span>
-                                                        {s.angkets_2 && calculateScore(s.angkets_2) > 0 && (
+                                                        <span className="font-semibold text-slate-600">{calculateScore(s.angkets_2, EFI_NEGATIVE) || "-"}</span>
+                                                        {s.angkets_2 && calculateScore(s.angkets_2, EFI_NEGATIVE) > 0 && (
                                                             <button
-                                                                onClick={(e) => { e.stopPropagation(); const val = getScaleValidity(calculateScore(s.angkets_2), 205); if (val) setPopover({ text: val.desc, x: e.clientX, y: e.clientY, idx: `v2-${s.id}` }); }}
-                                                                className={`text-[9px] px-2 py-0.5 rounded-full border font-bold hover:scale-105 transition-transform ${getScaleValidity(calculateScore(s.angkets_2), 205)?.color}`}
+                                                                onClick={(e) => { e.stopPropagation(); const val = getScaleValidity(calculateScore(s.angkets_2, EFI_NEGATIVE), 205); if (val) setPopover({ text: val.desc, x: e.clientX, y: e.clientY, idx: `v2-${s.id}` }); }}
+                                                                className={`text-[9px] px-2 py-0.5 rounded-full border font-bold hover:scale-105 transition-transform ${getScaleValidity(calculateScore(s.angkets_2, EFI_NEGATIVE), 205)?.color}`}
                                                             >
-                                                                {getScaleValidity(calculateScore(s.angkets_2), 205)?.label}
+                                                                {getScaleValidity(calculateScore(s.angkets_2, EFI_NEGATIVE), 205)?.label}
                                                             </button>
                                                         )}
                                                     </div>
