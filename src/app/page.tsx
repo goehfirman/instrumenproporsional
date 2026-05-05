@@ -10,6 +10,7 @@ export default function StudentLogin() {
   const [name, setName] = useState("");
   const [school, setSchool] = useState("");
   const [phone, setPhone] = useState("");
+  const [phoneError, setPhoneError] = useState("");
   const [loading, setLoading] = useState(false);
   const router = useRouter();
 
@@ -17,7 +18,7 @@ export default function StudentLogin() {
     e.preventDefault();
     const cleanName = name.trim().toUpperCase();
     const cleanSchool = school.trim().toUpperCase();
-    if (!cleanName || !cleanSchool) return;
+    if (!cleanName || !cleanSchool || phoneError) return;
 
     setLoading(true);
     try {
@@ -158,20 +159,36 @@ export default function StudentLogin() {
             <label htmlFor="phone" className="block text-sm font-semibold text-foreground mb-2">
               Nomor HP (Opsional)
             </label>
-            <input
-              id="phone"
-              type="tel"
-              value={phone}
-              onChange={(e) => setPhone(e.target.value)}
-              placeholder="Contoh: 081234567890"
-              className="w-full text-lg px-4 py-4 rounded-xl border-2 border-slate-200 focus:border-primary focus:ring-4 focus:ring-primary/20 transition-all outline-none"
-              disabled={loading}
-            />
+            <div className="relative">
+              <input
+                id="phone"
+                type="text"
+                inputMode="numeric"
+                value={phone}
+                onChange={(e) => {
+                  const val = e.target.value;
+                  setPhone(val);
+                  if (val && !/^\d+$/.test(val)) {
+                    setPhoneError("Hanya angka yang diperbolehkan");
+                  } else {
+                    setPhoneError("");
+                  }
+                }}
+                placeholder="Contoh: 081234567890"
+                className={`w-full text-lg px-4 py-4 rounded-xl border-2 transition-all outline-none ${phoneError ? 'border-rose-500 focus:ring-4 focus:ring-rose-500/20' : 'border-slate-200 focus:border-primary focus:ring-4 focus:ring-primary/20'}`}
+                disabled={loading}
+              />
+              {phoneError && (
+                <p className="mt-2 text-xs font-bold text-rose-500 flex items-center gap-1 animate-in fade-in slide-in-from-top-1">
+                  <span className="text-sm">⚠️</span> {phoneError}
+                </p>
+              )}
+            </div>
           </div>
 
           <button
             type="submit"
-            disabled={loading || !name.trim() || !school.trim()}
+            disabled={loading || !name.trim() || !school.trim() || !!phoneError}
             className="w-full bg-primary hover:bg-primary-hover text-white font-bold text-lg py-4 rounded-xl transition-all shadow-lg hover:shadow-primary/50 disabled:opacity-50 disabled:pointer-events-none flex items-center justify-center gap-2"
           >
             {loading ? (
