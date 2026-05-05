@@ -9,6 +9,7 @@ import { Loader2 } from "lucide-react";
 export default function StudentLogin() {
   const [name, setName] = useState("");
   const [school, setSchool] = useState("");
+  const [phone, setPhone] = useState("");
   const [loading, setLoading] = useState(false);
   const router = useRouter();
 
@@ -56,6 +57,7 @@ export default function StudentLogin() {
             id: studentId,
             name: cleanName,
             school: cleanSchool,
+            phone: phone.trim(),
             createdAt: new Date().toISOString(),
             status_progres: 0
           };
@@ -65,17 +67,27 @@ export default function StudentLogin() {
         if (db) {
           await setDoc(doc(db, "students", studentId), existingData);
         }
+      } else if (db && phone.trim()) {
+        // If student exists but we have a phone number, update it (optional sync)
+        await setDoc(doc(db, "students", studentId), { phone: phone.trim() }, { merge: true });
       }
 
       // 3. Save to Session/LocalStorage
       sessionStorage.setItem("studentId", studentId);
       sessionStorage.setItem("studentName", cleanName);
       sessionStorage.setItem("studentSchool", existingData.school || cleanSchool);
+      if (phone.trim() || existingData.phone) {
+        sessionStorage.setItem("studentPhone", phone.trim() || existingData.phone || "");
+      }
       localStorage.setItem(`start_${studentId}`, Date.now().toString());
 
       const localData = localStorage.getItem("localStudentsData");
       let students = localData ? JSON.parse(localData) : {};
-      students[studentId] = { ...existingData, lastLogin: new Date().toISOString() };
+      students[studentId] = { 
+        ...existingData, 
+        phone: phone.trim() || existingData.phone || "",
+        lastLogin: new Date().toISOString() 
+      };
       localStorage.setItem("localStudentsData", JSON.stringify(students));
 
       router.push("/student");
@@ -112,7 +124,7 @@ export default function StudentLogin() {
         <form onSubmit={handleLogin} className="p-8 pb-6">
           <div className="mb-6">
             <label htmlFor="name" className="block text-sm font-semibold text-foreground mb-2">
-              Masukan Nama Lengkap
+              Masukan Nama Lengkap <span className="text-rose-500">*</span>
             </label>
             <input
               id="name"
@@ -128,7 +140,7 @@ export default function StudentLogin() {
 
           <div className="mb-6">
             <label htmlFor="school" className="block text-sm font-semibold text-foreground mb-2">
-              Nama Sekolah
+              Nama Sekolah <span className="text-rose-500">*</span>
             </label>
             <input
               id="school"
@@ -138,6 +150,21 @@ export default function StudentLogin() {
               placeholder="Contoh: SMP Negeri 1 Jakarta"
               className="w-full text-lg px-4 py-4 rounded-xl border-2 border-slate-200 focus:border-primary focus:ring-4 focus:ring-primary/20 transition-all outline-none"
               required
+              disabled={loading}
+            />
+          </div>
+
+          <div className="mb-6">
+            <label htmlFor="phone" className="block text-sm font-semibold text-foreground mb-2">
+              Nomor HP (Opsional)
+            </label>
+            <input
+              id="phone"
+              type="tel"
+              value={phone}
+              onChange={(e) => setPhone(e.target.value)}
+              placeholder="Contoh: 081234567890"
+              className="w-full text-lg px-4 py-4 rounded-xl border-2 border-slate-200 focus:border-primary focus:ring-4 focus:ring-primary/20 transition-all outline-none"
               disabled={loading}
             />
           </div>
